@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Brook</PackageId>
+    <PackageTags>micro sql helper</PackageTags>
+    <Title>Brook</Title>
+    <Description>A high performance micro sql helper supporting SQL Server</Description>
+    <Authors>Eddie</Authors>
+   <TargetFrameworks>net451;net461</TargetFrameworks>
+   <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+   
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net451|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;net451</DefineConstants>
+    <OutputPath>bin\Debug\net451\</OutputPath>
+  </PropertyGroup>
+
+
+   <ItemGroup Condition="'$(TargetFramework)' == 'net451'">
+   <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.CSharp" />
+     <Reference Include="System.Configuration" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
+   <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.CSharp" />
+     <Reference Include="System.Configuration" />
+  </ItemGroup>
+  
+ 
+  
+</Project>
