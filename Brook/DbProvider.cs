@@ -89,7 +89,7 @@ namespace Brook
         {
             DbConfig = argConfig;
             Provider = DbProviderFactories.GetFactory(DbConfig.ProviderName);
-            Conn = GetConnection;
+            //Conn = GetConnection;
             //DataStore = new DataSet { Locale = Section.Get.Common.Culture };
             Timeout = Section.Get.Database.CommandTimeOut;
         }

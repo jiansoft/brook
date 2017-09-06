@@ -50,7 +50,6 @@ namespace Brook
         {
         }
 
-
         /// <summary>
         /// 變更連線的資料庫來源
         /// </summary>
@@ -128,7 +127,6 @@ namespace Brook
             }
             return classobj;
         }
-
 
         /// <summary>
         /// 執行SQL指令後回傳 DataTable V2.0
