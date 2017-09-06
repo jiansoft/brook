@@ -342,29 +342,6 @@ namespace Brook
         /// <summary>
         /// 執行SQL指令後回傳 DataReader V2.0
         /// </summary>
-        /// <param name="sqlCmd">SQL 指令</param>
-        /// <param name="parameters">SQL 指令參數</param>
-        /// <returns></returns>
-        private DbDataReader Reader(string sqlCmd, DbParameter[] parameters = null)
-        {
-            return Reader(CommandType.Text, sqlCmd, parameters);
-        }
-
-        /// <summary>
-        /// 執行SQL指令後回傳 DataReader V2.0
-        /// </summary>
-        /// <param name="sqlCmd">SQL 指令</param>
-        /// <param name="parameters">SQL 指令參數</param>
-        /// <param name="commandType">SQL 執行模式 SP、Text</param>
-        /// <returns></returns>
-        private DbDataReader Reader(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
-        {
-            return Reader(Timeout, commandType, sqlCmd, parameters);
-        }
-
-        /// <summary>
-        /// 執行SQL指令後回傳 DataReader V2.0
-        /// </summary>
         /// <param name="timeOut">指令逾時時間</param>
         /// <param name="sqlCmd">SQL 指令</param>
         /// <param name="parameters">SQL 指令參數</param>
