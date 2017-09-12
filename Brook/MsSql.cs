@@ -4,10 +4,10 @@ using System.Configuration;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
-using Brook.Configuration;
-using Brook.Utility;
+using jIAnSoft.Framework.Brook.Configuration;
+using jIAnSoft.Framework.Brook.Utility;
 
-namespace Brook
+namespace jIAnSoft.Framework.Brook
 {
     public sealed class MsSql : DbProvider
     {

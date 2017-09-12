@@ -2,7 +2,7 @@
 using System.Configuration;
 using System.Globalization;
 
-namespace Brook.Configuration
+namespace jIAnSoft.Framework.Brook.Configuration
 {
     public class Common : ConfigurationElement
     {

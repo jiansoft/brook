@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Brook.Utility
+namespace jIAnSoft.Framework.Brook.Utility
 {
     public static class ReflectionHelpers
     {

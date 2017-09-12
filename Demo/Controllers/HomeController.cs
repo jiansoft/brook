@@ -6,9 +6,9 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Web.Mvc;
-using Brook;
-using Brook.Configuration;
+using jIAnSoft.Framework.Brook.Configuration;
 using Dapper;
+using jIAnSoft.Framework.Brook;
 
 namespace Demo.Controllers
 {
@@ -18,6 +18,8 @@ namespace Demo.Controllers
         {
             try
             {
+                Response.Write(Section.Get.Database.Which["Pingball"].Connection);
+                    
                 var sw = new Stopwatch();
                 long t1 = 0;
                 long t2 = 0;
@@ -26,41 +28,41 @@ namespace Demo.Controllers
                 DataSet ds;
                 using (var db = new MsSql("Pingball"))
                 {
-                    var connection = new SqlConnection(db.ConnectionSource);
-                    connection.Open();
-                    var petaPoco = new PetaPoco.Database("DefaultConnection");
-                    var user = db.Table("SELECT UserId FROM[dbo].[User] order by newId()");
+                   // var connection = new SqlConnection(db.ConnectionSource);
+                    //connection.Open();
+                    //var petaPoco = new PetaPoco.Database("DefaultConnection");
+                    //var user = db.Table("SELECT UserId FROM[dbo].[User] order by newId()");
                     //var customers = db.GetSqlConnection().Query<int>("SELECT COUNT(*) FROM [dbo].[User]");
                     //Response.Write($"會員數 :{customers}<br />");
                     for (var ii = 0; ii < 10; ii++)
                     {
                         for (var i = 1; i <= count; i = i + 3)
                         {
-                            sw.Start();
-
-                            var player1 =
-                                connection.QueryFirst<Player>(
-                                    $"SELECT * FROM [dbo].[User] where [UserId] = {user.Rows[i][0]}");
-
-                            sw.Stop();
-                            t1 += sw.ElapsedMilliseconds;
-                            sw.Reset();
-                            sw.Start();
-
-                            var player2 =
-                                db.First<Player>($"SELECT * FROM [dbo].[User] where [UserId] = {user.Rows[i + 1][0]}", new DbParameter[] { });
-                            sw.Stop();
-                            t2 += sw.ElapsedMilliseconds;
-                            sw.Reset();
-                            sw.Start();
-                           
-                            var article =
-                                petaPoco.SingleOrDefault<Player>(
-                                    $"SELECT * FROM [dbo].[User] where [UserId] = {user.Rows[i + 2][0]}");
-                        
-                            sw.Stop();
-                            t3 += sw.ElapsedMilliseconds;
-                            sw.Reset();
+//                            sw.Start();
+//
+//                            var player1 =
+//                                connection.QueryFirst<Player>(
+//                                    $"SELECT * FROM [dbo].[User] where [UserId] = {user.Rows[i][0]}");
+//
+//                            sw.Stop();
+//                            t1 += sw.ElapsedMilliseconds;
+//                            sw.Reset();
+//                            sw.Start();
+//
+//                            var player2 =
+//                                db.First<Player>($"SELECT * FROM [dbo].[User] where [UserId] = {user.Rows[i + 1][0]}", new DbParameter[] { });
+//                            sw.Stop();
+//                            t2 += sw.ElapsedMilliseconds;
+//                            sw.Reset();
+//                            sw.Start();
+//                           
+//                            var article =
+//                                petaPoco.SingleOrDefault<Player>(
+//                                    $"SELECT * FROM [dbo].[User] where [UserId] = {user.Rows[i + 2][0]}");
+//                        
+//                            sw.Stop();
+//                            t3 += sw.ElapsedMilliseconds;
+//                            sw.Reset();
 
                             //sw.Start();
 
@@ -80,12 +82,12 @@ namespace Demo.Controllers
                     }
                     Response.Write($"Dapper = {t1},Brook = {t2},PetaPoco = {t3}<br><br><br>");
 
-                     ds = db.DataSet(
-                        CommandType.Text,
-                        $"SELECT MachineKey,UserName FROM [dbo].[User];SELECT TOP (1000) [MessageId],[Content],[Status],[CreateTime]  FROM [Pingball].[dbo].[Message];");
+//                     ds = db.DataSet(
+//                        CommandType.Text,
+//                        $"SELECT MachineKey,UserName FROM [dbo].[User];SELECT TOP (1000) [MessageId],[Content],[Status],[CreateTime]  FROM [Pingball].[dbo].[Message];");
 
                 }
-                Response.Write($"ds.Tables.Count = {ds.Tables.Count}<br><br><br>");
+                //Response.Write($"ds.Tables.Count = {ds.Tables.Count}<br><br><br>");
 
             }
             catch (Exception exception)

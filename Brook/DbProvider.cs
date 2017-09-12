@@ -6,11 +6,10 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using Brook.Configuration;
+using jIAnSoft.Framework.Brook.Configuration;
 
-namespace Brook
+namespace jIAnSoft.Framework.Brook
 {
-
     public abstract class DbProvider : ProviderBase, IDisposable
     {
         protected bool Disposed;
@@ -46,14 +45,12 @@ namespace Brook
         /// 存放查詢時的參數
         /// </summary>
        // private DbParameter[] DbParameters;
-        
-
-        public DbProvider(string argStrDbProviderName)
+        protected DbProvider(string argStrDbProviderName)
             : this(InitDbConfig(argStrDbProviderName))
         {
         }
 
-        public DbProvider(ConnectionStringSettings argDbConfig)
+        protected DbProvider(ConnectionStringSettings argDbConfig)
         {
             InitDbProvider(argDbConfig);
         }
@@ -89,8 +86,6 @@ namespace Brook
         {
             DbConfig = argConfig;
             Provider = DbProviderFactories.GetFactory(DbConfig.ProviderName);
-            //Conn = GetConnection;
-            //DataStore = new DataSet { Locale = Section.Get.Common.Culture };
             Timeout = Section.Get.Database.CommandTimeOut;
         }
 

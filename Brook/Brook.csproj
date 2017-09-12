@@ -8,14 +8,15 @@
     <Authors>Eddie</Authors>
    <TargetFrameworks>net451;net461</TargetFrameworks>
    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+   <RootNamespace>jIAnSoft.Framework.Brook</RootNamespace>
    
   </PropertyGroup>
-
+  <!--
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net451|AnyCPU'">
     <DefineConstants>TRACE;DEBUG;net451</DefineConstants>
     <OutputPath>bin\Debug\net451\</OutputPath>
   </PropertyGroup>
-
+-->
 
    <ItemGroup Condition="'$(TargetFramework)' == 'net451'">
    <Reference Include="System" />

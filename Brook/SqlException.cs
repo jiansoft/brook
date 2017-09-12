@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Brook
+namespace jIAnSoft.Framework.Brook
 {
+    /// <inheritdoc />
     /// <summary>
     /// This is a System.Exception class for handling exceptions in  SQL operations.
     /// </summary>
