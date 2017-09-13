@@ -165,12 +165,13 @@ namespace jIAnSoft.Framework.Brook
             if (null == parameters) return string.Empty;
             var t = new string[parameters.Length];
             var i = 0;
+            //[{ Key: "@MatchID",Val: "12199414"}]
             foreach (var p in parameters)
             {
-                t[i] = $"@{p.ParameterName}={p.Value}";
+                t[i] = $"{{Key:'{p.ParameterName}',Val:'{p.Value.ToString().Replace("\"", "\\\"")}'}}";
                 i++;
             }
-            return string.Join(" , ", t);
+            return $"[{string.Join(" ,", t)}]";
         }
 
         /// <summary>
