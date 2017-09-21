@@ -17,7 +17,7 @@ namespace jIAnSoft.Framework.Brook
         /// <summary>
         /// 連線逾時時間限制
         /// </summary>
-        private int _intTimeout = 300;
+        private int _intTimeout = 30;
 
         [DefaultValue(30)]
         protected int Timeout
@@ -41,7 +41,7 @@ namespace jIAnSoft.Framework.Brook
         /// </summary>
         protected DbConnection Conn { get; set; }
 
-        private DatabaseSet _provider { get; set; }
+        private DatabaseSet DbConfiguration { get; set; }
 
         /// <inheritdoc />
         /// <summary>
@@ -64,15 +64,14 @@ namespace jIAnSoft.Framework.Brook
         /// </summary>
         protected  ConnectionStringSettings InitDbConfig(string argStrDbProviderName)
         {
-            _provider = Section.Get.Database.Which[argStrDbProviderName];
+            DbConfiguration = Section.Get.Database.Which[argStrDbProviderName];
             return new ConnectionStringSettings
             {
-                ConnectionString = _provider.Connection,
-                ProviderName = _provider.ProviderName,
-                Name = _provider.Name
+                ConnectionString = DbConfiguration.Connection,
+                ProviderName = DbConfiguration.ProviderName,
+                Name = DbConfiguration.Name
             };
         }
-
         
         /// <summary>
         /// 初始化資料庫連線
@@ -83,7 +82,6 @@ namespace jIAnSoft.Framework.Brook
             InitDbProvider(InitDbConfig(argStrDbProviderName));
         }
        
-
         /// <summary>
         /// 初始化資料庫連線
         /// </summary>
@@ -92,7 +90,7 @@ namespace jIAnSoft.Framework.Brook
         {
             DbConfig = argConfig;
             Provider = DbProviderFactories.GetFactory(DbConfig.ProviderName);
-            Timeout = _provider.CommandTimeOut;
+            Timeout = DbConfiguration.CommandTimeOut;
         }
         
         /// <summary>
