@@ -73,6 +73,7 @@ namespace jIAnSoft.Framework.Brook
             };
         }
 
+        
         /// <summary>
         /// 初始化資料庫連線
         /// </summary>
@@ -81,6 +82,7 @@ namespace jIAnSoft.Framework.Brook
         {
             InitDbProvider(InitDbConfig(argStrDbProviderName));
         }
+       
 
         /// <summary>
         /// 初始化資料庫連線
@@ -92,19 +94,18 @@ namespace jIAnSoft.Framework.Brook
             Provider = DbProviderFactories.GetFactory(DbConfig.ProviderName);
             Timeout = _provider.CommandTimeOut;
         }
-
-        /*
+        
         /// <summary>
         /// 取回指定資料庫的資料庫連線物件
         /// </summary>
         /// <param name="argStrDbProviderName"></param>
         /// <returns></returns>
-        public DbConnection GetSqlConnection(string argStrDbProviderName)
+        public DbConnection GetNewSqlConnection(string argStrDbProviderName)
         {
             InitDbProvider(argStrDbProviderName);
             return GetConnection;
         }
-        
+        /*
         /// <summary>
         /// 取回目前連線的資料庫連線物件
         /// </summary>
