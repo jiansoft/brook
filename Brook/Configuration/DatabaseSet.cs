@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
 
 namespace jIAnSoft.Framework.Brook.Configuration
 {
@@ -21,5 +22,11 @@ namespace jIAnSoft.Framework.Brook.Configuration
         /// </summary>
         [ConfigurationProperty("providerName", IsRequired = true)]
         public string ProviderName => (string)base["providerName"];
+
+        /// <summary>
+        /// 資料庫連線逾時設定
+        /// </summary>
+        [ConfigurationProperty("commandTimeOut", DefaultValue = "30")]
+        public int CommandTimeOut => Convert.ToInt32(base["commandTimeOut"]);
     }
 }

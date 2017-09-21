@@ -6,7 +6,7 @@
     <Title>Brook</Title>
     <Description>A high performance micro sql helper supporting SQL Server</Description>
     <Authors>Eddie</Authors>
-   <TargetFrameworks>net451;net461</TargetFrameworks>
+   <TargetFrameworks>net451</TargetFrameworks>
    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
    <RootNamespace>jIAnSoft.Framework.Brook</RootNamespace>
    
@@ -25,16 +25,5 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
      <Reference Include="System.Configuration" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
-   <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="Microsoft.CSharp" />
-     <Reference Include="System.Configuration" />
-  </ItemGroup>
-  
- 
-  
+  </ItemGroup>  
 </Project>

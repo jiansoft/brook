@@ -19,11 +19,11 @@ namespace jIAnSoft.Framework.Brook
         /// </summary>
         private int _intTimeout = 300;
 
-        [DefaultValue(600)]
+        [DefaultValue(30)]
         protected int Timeout
         {
             get => _intTimeout;
-            set => _intTimeout = value < 0 ? 0 : value;
+            set => _intTimeout = value < 0 ? 30 : value;
         }
 
         /// <summary>
@@ -41,13 +41,17 @@ namespace jIAnSoft.Framework.Brook
         /// </summary>
         protected DbConnection Conn { get; set; }
 
+        private DatabaseSet _provider { get; set; }
+
+        /// <inheritdoc />
         /// <summary>
         /// 存放查詢時的參數
         /// </summary>
-       // private DbParameter[] DbParameters;
+
         protected DbProvider(string argStrDbProviderName)
-            : this(InitDbConfig(argStrDbProviderName))
+//            : this(InitDbConfig(argStrDbProviderName))
         {
+            InitDbProvider(InitDbConfig(argStrDbProviderName));
         }
 
         protected DbProvider(ConnectionStringSettings argDbConfig)
@@ -58,14 +62,14 @@ namespace jIAnSoft.Framework.Brook
         /// <summary>
         /// 初始化 DbConfig 屬性
         /// </summary>
-        protected static ConnectionStringSettings InitDbConfig(string argStrDbProviderName)
+        protected  ConnectionStringSettings InitDbConfig(string argStrDbProviderName)
         {
-            var provider = Section.Get.Database.Which[argStrDbProviderName];
+            _provider = Section.Get.Database.Which[argStrDbProviderName];
             return new ConnectionStringSettings
             {
-                ConnectionString = provider.Connection,
-                ProviderName = provider.ProviderName,
-                Name = provider.Name
+                ConnectionString = _provider.Connection,
+                ProviderName = _provider.ProviderName,
+                Name = _provider.Name
             };
         }
 
@@ -73,7 +77,7 @@ namespace jIAnSoft.Framework.Brook
         /// 初始化資料庫連線
         /// </summary>
         /// <param name="argStrDbProviderName"></param>
-        protected void InitDbProvider(string argStrDbProviderName)
+        private void InitDbProvider(string argStrDbProviderName)
         {
             InitDbProvider(InitDbConfig(argStrDbProviderName));
         }
@@ -82,13 +86,14 @@ namespace jIAnSoft.Framework.Brook
         /// 初始化資料庫連線
         /// </summary>
         /// <param name="argConfig"></param>
-        protected void InitDbProvider(ConnectionStringSettings argConfig)
+        private void InitDbProvider(ConnectionStringSettings argConfig)
         {
             DbConfig = argConfig;
             Provider = DbProviderFactories.GetFactory(DbConfig.ProviderName);
-            Timeout = Section.Get.Database.CommandTimeOut;
+            Timeout = _provider.CommandTimeOut;
         }
 
+        /*
         /// <summary>
         /// 取回指定資料庫的資料庫連線物件
         /// </summary>
@@ -99,7 +104,7 @@ namespace jIAnSoft.Framework.Brook
             InitDbProvider(argStrDbProviderName);
             return GetConnection;
         }
-
+        
         /// <summary>
         /// 取回目前連線的資料庫連線物件
         /// </summary>
@@ -108,7 +113,7 @@ namespace jIAnSoft.Framework.Brook
         {
             return Conn;
         }
-
+        */
         /// <summary>
         /// 目前連線的資料庫位置
         /// </summary>
@@ -118,7 +123,7 @@ namespace jIAnSoft.Framework.Brook
         /// <summary>
         /// 取得資料庫連線
         /// </summary>
-        protected DbConnection GetConnection
+        private DbConnection GetConnection
         {
             get
             {

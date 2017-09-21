@@ -269,6 +269,10 @@ namespace jIAnSoft.Framework.Brook
                     parames.AddRange(parameters);
                 }
                 Execute(timeOut, commandType, sqlCmd, parames.ToArray());
+                if (null == parame.Value)
+                {
+                    return default(T);
+                }
                 return (T) Conversion.ConvertTo<T>(parame.Value);
             }
             catch (Exception sqlEx)
@@ -394,7 +398,12 @@ namespace jIAnSoft.Framework.Brook
 
         public T One<T>(int timeOut, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            return (T) Conversion.ConvertTo<T>(GetCommand(timeOut, commandType, sqlCmd, parameters).ExecuteScalar());
+            var result = GetCommand(timeOut, commandType, sqlCmd, parameters).ExecuteScalar();
+            if (null == result)
+            {
+                return default(T);
+            }
+            return (T) Conversion.ConvertTo<T>(result);
         }
 
         /// <summary>
