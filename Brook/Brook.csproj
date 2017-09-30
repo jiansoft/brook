@@ -4,11 +4,14 @@
     <PackageId>Brook</PackageId>
     <PackageTags>micro sql helper</PackageTags>
     <Title>Brook</Title>
-    <Description>A high performance micro sql helper supporting SQL Server</Description>
+    <Description>A high performance micro sql helper supporting SQL Server、MySql</Description>
     <Authors>Eddie</Authors>
    <TargetFrameworks>net451</TargetFrameworks>
    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
    <RootNamespace>jIAnSoft.Framework.Brook</RootNamespace>
+   <AssemblyVersion>17.9.30</AssemblyVersion>
+   <FileVersion>17.9.30</FileVersion>
+   <Version>17.9.30</Version>
    
   </PropertyGroup>
   <!--
