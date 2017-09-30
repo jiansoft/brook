@@ -19,7 +19,7 @@ namespace jIAnSoft.Framework.Brook
         /// <summary>
         /// 連線逾時時間限制
         /// </summary>
-        private int _intTimeout = 300;
+        private int _intTimeout = 30;
 
         [DefaultValue(30)]
         private int Timeout
@@ -43,7 +43,9 @@ namespace jIAnSoft.Framework.Brook
         /// </summary>
         protected DbConnection Conn { get; set; }
 
+
         private DatabaseSet DbSet { get; set; }
+        
 
         /// <inheritdoc />
         /// <summary>
@@ -73,7 +75,7 @@ namespace jIAnSoft.Framework.Brook
                 Name = DbSet.Name
             };
         }
-
+        
         /// <summary>
         /// Initial Db connect
         /// </summary>
