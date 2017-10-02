@@ -36,7 +36,7 @@ namespace jIAnSoft.Framework.Brook
         /// <summary>
         /// 
         /// </summary>
-        protected ConnectionStringSettings DbConfig;
+        protected ConnectionStringSettings ConnectionSetting;
 
         /// <summary>
         /// 資料庫連線資源
@@ -63,7 +63,7 @@ namespace jIAnSoft.Framework.Brook
         }
 
         /// <summary>
-        /// Initial DbConfig 
+        /// Initial ConnectionSetting 
         /// </summary>
         protected ConnectionStringSettings InitDbConfig(string argStrDbProviderName)
         {
@@ -91,11 +91,11 @@ namespace jIAnSoft.Framework.Brook
         /// <param name="argConfig"></param>
         private void InitDbProvider(ConnectionStringSettings argConfig)
         {
-            DbConfig = argConfig;
+            ConnectionSetting = argConfig;
 #if NET451
-            _provider = System.Data.Common.DbProviderFactories.GetFactory(DbConfig.ProviderName);
+            _provider = System.Data.Common.DbProviderFactories.GetFactory(ConnectionSetting.ProviderName);
 #elif NETSTANDARD2_0
-            _provider = DbProviderFactories.GetFactory(DbConfig.ProviderName);
+            _provider = DbProviderFactories.GetFactory(ConnectionSetting.ProviderName);
 #endif
             Timeout = DbSet.CommandTimeOut;
         }
@@ -114,7 +114,7 @@ namespace jIAnSoft.Framework.Brook
         /// <summary>
         /// 目前連線的資料庫位置
         /// </summary>
-        public string ConnectionSource => DbConfig.ConnectionString;
+        public string ConnectionSource => ConnectionSetting.ConnectionString;
 
         /// <summary>
         /// 取得資料庫連線
@@ -127,9 +127,9 @@ namespace jIAnSoft.Framework.Brook
                 if (con == null)
                     throw new SqlException(string.Format(
                         new CultureInfo(Section.Get.Common.Culture.Name),
-                        $"Cannot connect to specified sql server({DbConfig.Name} => {DbConfig.ConnectionString})."
+                        $"Cannot connect to specified sql server({ConnectionSetting.Name} => {ConnectionSetting.ConnectionString})."
                     ));
-                con.ConnectionString = DbConfig.ConnectionString;
+                con.ConnectionString = ConnectionSetting.ConnectionString;
                 con.Open();
                 return con;
             }
@@ -255,7 +255,7 @@ namespace jIAnSoft.Framework.Brook
                         new CultureInfo(Section.Get.Common.Culture.Name),
                         "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
                         sqlEx.Message,
-                        DbConfig.Name,
+                        ConnectionSetting.Name,
                         sqlCmd,
                         PrintDbParameters(parameters)),
                     sqlEx);
@@ -432,7 +432,7 @@ namespace jIAnSoft.Framework.Brook
                         new CultureInfo(Section.Get.Common.Culture.Name),
                         "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
                         sqlEx.Message,
-                        DbConfig.Name,
+                        ConnectionSetting.Name,
                         sqlCmd,
                         PrintDbParameters(parameters)),
                     sqlEx);
@@ -483,7 +483,7 @@ namespace jIAnSoft.Framework.Brook
                         new CultureInfo(Section.Get.Common.Culture.Name),
                         "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
                         sqlEx.Message,
-                        DbConfig.Name,
+                        ConnectionSetting.Name,
                         sqlCmd,
                         PrintDbParameters(parameters)),
                     sqlEx);
@@ -516,7 +516,7 @@ namespace jIAnSoft.Framework.Brook
                         new CultureInfo(Section.Get.Common.Culture.Name),
                         "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
                         sqlEx.Message,
-                        DbConfig.Name,
+                        ConnectionSetting.Name,
                         sqlCmd,
                         PrintDbParameters(parameters)),
                     sqlEx);
@@ -618,7 +618,7 @@ namespace jIAnSoft.Framework.Brook
                         new CultureInfo(Section.Get.Common.Culture.Name),
                         "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
                         sqlEx.Message,
-                        DbConfig.Name,
+                        ConnectionSetting.Name,
                         sqlCmd,
                         PrintDbParameters(parameters)),
                     sqlEx);
