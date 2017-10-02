@@ -52,7 +52,7 @@ namespace jIAnSoft.Framework.Brook
             //GC.SuppressFinalize(this);
         }
 
-        //Brook.Fetch("dbname").Table(");
+        //Brook.Load("dbname").Table(");
     }
 
     /*public class Brook

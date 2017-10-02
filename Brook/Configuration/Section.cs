@@ -1,5 +1,6 @@
 ﻿using System.Configuration;
 
+//todo need use ConfigurationBuilder
 namespace jIAnSoft.Framework.Brook.Configuration
 {
     public class Section : ConfigurationSection

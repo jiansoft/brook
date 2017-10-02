@@ -45,7 +45,7 @@ namespace jIAnSoft.Framework.Brook
 
 
         private DatabaseSet DbSet { get; set; }
-        
+
 
         /// <inheritdoc />
         /// <summary>
@@ -75,7 +75,7 @@ namespace jIAnSoft.Framework.Brook
                 Name = DbSet.Name
             };
         }
-        
+
         /// <summary>
         /// Initial Db connect
         /// </summary>
@@ -92,12 +92,16 @@ namespace jIAnSoft.Framework.Brook
         private void InitDbProvider(ConnectionStringSettings argConfig)
         {
             DbConfig = argConfig;
+#if NET451
+            _provider = System.Data.Common.DbProviderFactories.GetFactory(DbConfig.ProviderName);
+#elif NETSTANDARD2_0
             _provider = DbProviderFactories.GetFactory(DbConfig.ProviderName);
+#endif
             Timeout = DbSet.CommandTimeOut;
         }
 
         /// <summary>
-        /// 取回指定資料庫的資料庫連線物件
+        ///Get new SQL connection
         /// </summary>
         /// <param name="argStrDbProviderName"></param>
         /// <returns></returns>
@@ -106,18 +110,7 @@ namespace jIAnSoft.Framework.Brook
             InitDbProvider(argStrDbProviderName);
             return GetConnection;
         }
-
-        /*
-        /// <summary>
-        /// 取回目前連線的資料庫連線物件
-        /// </summary>
-        /// <returns></returns>
-        public DbConnection GetSqlConnection()
-        {
-            return Conn;
-        }
-        */
-
+        
         /// <summary>
         /// 目前連線的資料庫位置
         /// </summary>
