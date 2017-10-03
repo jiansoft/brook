@@ -234,36 +234,41 @@ namespace jIAnSoft.Framework.Brook
         /// <returns></returns>
         public DataTable Table(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            try
+            using (var dss = DataSet(timeout, commandType, sqlCmd, parameters))
             {
-                using (var adapter = _provider.CreateDataAdapter())
-                {
-                    if (adapter == null) return new DataTable();
-                    adapter.SelectCommand = GetCommand(timeout, commandType, sqlCmd, parameters);
-                    using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
-                    {
-                        adapter.Fill(ds);
-                        var t = ds.Tables[0];
-                        return t;
-                    }
-                }
+                var t = dss.Tables[0];
+                return t;
             }
-            catch (Exception sqlEx)
-            {
-                throw new SqlException(
-                    string.Format(
-                        new CultureInfo(Section.Get.Common.Culture.Name),
-                        "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
-                        sqlEx.Message,
-                        ConnectionSetting.Name,
-                        sqlCmd,
-                        PrintDbParameters(parameters)),
-                    sqlEx);
-            }
-            finally
-            {
-                QueryCompleted();
-            }
+//            try
+//                {
+//                    using (var adapter = _provider.CreateDataAdapter())
+//                    {
+//                        if (adapter == null) return new DataTable();
+//                        adapter.SelectCommand = GetCommand(timeout, commandType, sqlCmd, parameters);
+//                        using (var ds = new DataSet { Locale = Section.Get.Common.Culture })
+//                        {
+//                            adapter.Fill(ds);
+//                            var t = ds.Tables[0];
+//                            return t;
+//                        }
+//                    }
+//                }
+//                catch (Exception sqlEx)
+//                {
+//                    throw new SqlException(
+//                        string.Format(
+//                            new CultureInfo(Section.Get.Common.Culture.Name),
+//                            "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
+//                            sqlEx.Message,
+//                            ConnectionSetting.Name,
+//                            sqlCmd,
+//                            PrintDbParameters(parameters)),
+//                        sqlEx);
+//                }
+//                finally
+//                {
+//                    QueryCompleted();
+//                }
         }
 
         /// <summary>
@@ -602,7 +607,10 @@ namespace jIAnSoft.Framework.Brook
             {
                 using (var adapter = _provider.CreateDataAdapter())
                 {
-                    if (adapter == null) return new DataSet();
+                    if (adapter == null)
+                    {
+                        return new DataSet();
+                    }
                     using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
                     {
                         adapter.SelectCommand = GetCommand(timeout, commandType, sqlCmd, parameters);

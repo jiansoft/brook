@@ -15,7 +15,7 @@ namespace DemoNetFramework
                 using (var db = new MsSql("Main"))
                 {
                     var t = db.Table(
-                        "SELECT TOP (10) [AccountID],[AccountSN],[AccountType],[Account],[Password],[Status],[Verify],[Agent],[VIPLv],[CreateTime] FROM[MainDB].[dbo].[TB_Account]",
+                        "SELECT TOP (10) [AccountID],[AccountSN],[AccountType],[Account],[Password],[Status],[Verify],[Agent],[VIPLv],[CreateTime] FROM [MainDB].[dbo].[TB_Account]",
                         new DbParameter[]
                         {
                            

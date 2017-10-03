@@ -98,7 +98,7 @@ namespace jIAnSoft.Framework.Brook
                             new CultureInfo(Section.Get.Common.Culture.Name),
                             "{0} Source = {1}\n Table = {2}\n",
                             sqlEx.Message,
-                            DbConfig.Name,
+                            ConnectionSetting.Name,
                             table.TableName
                         ),
                         sqlEx);

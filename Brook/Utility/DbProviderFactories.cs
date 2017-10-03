@@ -6,7 +6,7 @@ using System.Reflection;
 #if NETSTANDARD2_0
 namespace jIAnSoft.Framework.Brook.Utility
 {
-    internal static class DbProviderFactories
+    public static class DbProviderFactories
     {
         private static readonly Dictionary<string, DbProviderFactoryConfigItem> Providers;
 
@@ -58,6 +58,7 @@ namespace jIAnSoft.Framework.Brook.Utility
 
             var dbProvider = Providers[providerInvariantName];
             var type = Type.GetType(dbProvider.Type);
+
             if (null == type)
             {
                 throw new NotImplementedException("Provider not installed");

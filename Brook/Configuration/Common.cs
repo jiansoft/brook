@@ -1,9 +1,13 @@
-﻿using System;
-using System.Configuration;
+﻿
+
+using System;
 using System.Globalization;
 
 namespace jIAnSoft.Framework.Brook.Configuration
 {
+#if NET451
+    using System.Configuration;
+
     public class Common : ConfigurationElement
     {
         private CultureInfo _culture;
@@ -11,7 +15,7 @@ namespace jIAnSoft.Framework.Brook.Configuration
         /// <summary>
         /// 語系設定
         /// </summary>
-        [ConfigurationProperty("culture", DefaultValue =  "zh-TW", IsRequired = false)]
+        [ConfigurationProperty("culture", DefaultValue = "zh-TW", IsRequired = false)]
         public CultureInfo Culture
         {
             get
@@ -33,7 +37,7 @@ namespace jIAnSoft.Framework.Brook.Configuration
         private string Timezone => Convert.ToString(base["timezone"]);
 
         private static TimeZoneInfo _timeZoneInfo;
-        
+
 
         /// <summary>
         /// 時區設定
@@ -61,6 +65,42 @@ namespace jIAnSoft.Framework.Brook.Configuration
         /// </summary>
         [ConfigurationProperty("name", IsRequired = true)]
         public string Name => Convert.ToString(base["name"]);
-        
+
     }
+#elif NETSTANDARD2_0
+    public class Common 
+    {
+        public Common(string culture, string timezone)
+        {
+            try
+            { 
+                 TimeZone = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+            }
+            catch (Exception)
+            {
+                TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Taipei Standard Time");
+            }
+            try
+            {
+                Culture = new CultureInfo(culture);
+            }
+            catch (Exception)
+            {
+                Culture = new CultureInfo("zh-TW");
+            }
+        }
+
+        /// <summary>
+        /// 語系設定
+        /// </summary>
+        public CultureInfo Culture { get; set; }
+        /// <summary>
+        /// 時區設定
+        /// </summary>
+        /* [ConfigurationProperty("zone", IsRequired = false)]*/
+        public TimeZoneInfo TimeZone{ get; set; }
+
+        public string Name { get; set; }
+    }
+#endif
 }
