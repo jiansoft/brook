@@ -188,15 +188,15 @@ namespace jIAnSoft.Framework.Brook
         private DbCommand GetCommand(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters)
         {
             Conn = GetConnection;
-            var command = Conn.CreateCommand();
-            command.CommandTimeout = timeout;
-            command.CommandText = sqlCmd;
-            command.CommandType = commandType;
+            var cmd = Conn.CreateCommand();
+            cmd.CommandTimeout = timeout;
+            cmd.CommandText = sqlCmd;
+            cmd.CommandType = commandType;
             if (null != parameters)
             {
-                command.Parameters.AddRange(parameters);
+                cmd.Parameters.AddRange(parameters);
             }
-            return command;
+            return cmd;
         }
 
 
@@ -234,41 +234,14 @@ namespace jIAnSoft.Framework.Brook
         /// <returns></returns>
         public DataTable Table(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            using (var dss = DataSet(timeout, commandType, sqlCmd, parameters))
+            using (var reader = Reader(timeout, commandType, sqlCmd, parameters))
             {
-                var t = dss.Tables[0];
-                return t;
+                var dt = new DataTable();
+                dt.Load(reader);
+                reader.Close();
+                QueryCompleted();
+                return dt;
             }
-//            try
-//                {
-//                    using (var adapter = _provider.CreateDataAdapter())
-//                    {
-//                        if (adapter == null) return new DataTable();
-//                        adapter.SelectCommand = GetCommand(timeout, commandType, sqlCmd, parameters);
-//                        using (var ds = new DataSet { Locale = Section.Get.Common.Culture })
-//                        {
-//                            adapter.Fill(ds);
-//                            var t = ds.Tables[0];
-//                            return t;
-//                        }
-//                    }
-//                }
-//                catch (Exception sqlEx)
-//                {
-//                    throw new SqlException(
-//                        string.Format(
-//                            new CultureInfo(Section.Get.Common.Culture.Name),
-//                            "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
-//                            sqlEx.Message,
-//                            ConnectionSetting.Name,
-//                            sqlCmd,
-//                            PrintDbParameters(parameters)),
-//                        sqlEx);
-//                }
-//                finally
-//                {
-//                    QueryCompleted();
-//                }
         }
 
         /// <summary>
@@ -479,7 +452,8 @@ namespace jIAnSoft.Framework.Brook
         {
             try
             {
-                return GetCommand(timeout, commandType, sqlCmd, parameters).ExecuteNonQuery();
+                var cmd = GetCommand(timeout, commandType, sqlCmd, parameters);
+                return cmd.ExecuteNonQuery();
             }
             catch (Exception sqlEx)
             {
@@ -507,12 +481,12 @@ namespace jIAnSoft.Framework.Brook
         /// <param name="sqlCmd">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        private DbDataReader Reader(int timeout, CommandType commandType, string sqlCmd,
-            DbParameter[] parameters = null)
+        private DbDataReader Reader(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
             try
             {
-                return GetCommand(timeout, commandType, sqlCmd, parameters).ExecuteReader();
+                var cmd = GetCommand(timeout, commandType, sqlCmd, parameters);
+                return cmd.ExecuteReader();
             }
             catch (Exception sqlEx)
             {
@@ -580,7 +554,6 @@ namespace jIAnSoft.Framework.Brook
             return DataSet(CommandType.Text, sqlCmd, parameters);
         }
 
-
         /// <summary>
         ///  Execute SQL and return an <see cref="System.Data.DataSet"/>.
         /// </summary>
@@ -609,7 +582,8 @@ namespace jIAnSoft.Framework.Brook
                 {
                     if (adapter == null)
                     {
-                        return new DataSet();
+                        throw new SqlException("DbProviderFactory can't create a new instance of the provider's class.");
+                       // return new DataSet();
                     }
                     using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
                     {

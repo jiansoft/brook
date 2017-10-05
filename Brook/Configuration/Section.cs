@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
+﻿
 namespace jIAnSoft.Framework.Brook.Configuration
 {
 #if NET451
@@ -25,8 +23,10 @@ namespace jIAnSoft.Framework.Brook.Configuration
         public Common Common => (Common) base["common"];
     }
 #elif NETSTANDARD2_0
-    using System.IO;
     using Microsoft.Extensions.Configuration;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
 
     public class Section
     {
