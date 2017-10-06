@@ -41,7 +41,7 @@ namespace jIAnSoft.Framework.Brook.Configuration
                 .AddJsonFile("app.json", true, true);
             Figuration = builder.Build();
 
-            var co = new List<DatabaseSet>();
+            var co = new List<DatabaseConfiguration>();
             Figuration.GetSection("Database").Bind(co);
             var c = new Common(Figuration["Common:Culture"], Figuration["Common:Timezone"]);
             Figuration.GetSection("Common").Bind(c);

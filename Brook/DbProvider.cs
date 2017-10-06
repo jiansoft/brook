@@ -1,8 +1,8 @@
 ﻿using jIAnSoft.Framework.Brook.Configuration;
 using jIAnSoft.Framework.Brook.Utility;
+
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Configuration;
 using System.Configuration.Provider;
 using System.Data;
@@ -12,24 +12,12 @@ using System.Text.RegularExpressions;
 
 namespace jIAnSoft.Framework.Brook
 {
-    public abstract class DbProvider : ProviderBase, IDisposable
+    public class DbProvider : ProviderBase, IDisposable
     {
-        protected bool Disposed;
+        private bool _disposed;
 
         /// <summary>
-        /// 連線逾時時間限制
-        /// </summary>
-        private int _intTimeout = 30;
-
-        [DefaultValue(30)]
-        private int Timeout
-        {
-            get => _intTimeout;
-            set => _intTimeout = value < 0 ? 300 : value;
-        }
-
-        /// <summary>
-        /// 
+        /// Db factory
         /// </summary>
         private DbProviderFactory _provider;
 
@@ -39,25 +27,42 @@ namespace jIAnSoft.Framework.Brook
         protected ConnectionStringSettings ConnectionSetting;
 
         /// <summary>
-        /// 資料庫連線資源
+        /// Connection resource
         /// </summary>
-        protected DbConnection Conn { get; set; }
+        private DbConnection Conn { get; set; }
 
-
-        private DatabaseSet DbSet { get; set; }
-
-
-        /// <inheritdoc />
         /// <summary>
-        /// 存放查詢時的參數
+        /// Db configuration
         /// </summary>
+        private DatabaseConfiguration DbConfiguration { get; set; }
 
-        protected DbProvider(string argStrDbProviderName)
+        public DbProvider(string argStrDbProviderName)
         {
-            InitDbProvider(InitDbConfig(argStrDbProviderName));
+            InitDbProvider(InitConnectionStringSetting(argStrDbProviderName));
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="argStrHost"></param>
+        /// <param name="argIntPort"></param>
+        /// <param name="argStrUser"></param>
+        /// <param name="argStrPassword"></param>
+        /// <param name="argStrDbName"></param>
+        /// <param name="providerName"></param>
+        public DbProvider(string argStrHost, int argIntPort, string argStrDbName, string argStrUser, string argStrPassword,string providerName)
+            : this(new ConnectionStringSettings
+            {
+                ConnectionString =
+                    $"server={argStrHost},{argIntPort};database={argStrDbName};uid={argStrUser};pwd={argStrPassword};",
+                ProviderName = providerName,
+                Name = argStrDbName
+            })
+        {
         }
 
-        protected DbProvider(ConnectionStringSettings argDbConfig)
+
+        internal DbProvider(ConnectionStringSettings argDbConfig)
         {
             InitDbProvider(argDbConfig);
         }
@@ -65,26 +70,26 @@ namespace jIAnSoft.Framework.Brook
         /// <summary>
         /// Initial ConnectionSetting 
         /// </summary>
-        protected ConnectionStringSettings InitDbConfig(string argStrDbProviderName)
-        {
-            DbSet = Section.Get.Database.Which[argStrDbProviderName];
+        protected ConnectionStringSettings InitConnectionStringSetting(string argStrDbProviderName)
+        {            
+            DbConfiguration = Section.Get.Database.Which[argStrDbProviderName];
             return new ConnectionStringSettings
             {
-                ConnectionString = DbSet.Connection,
-                ProviderName = DbSet.ProviderName,
-                Name = DbSet.Name
+                ConnectionString = DbConfiguration.Connection,
+                ProviderName = DbConfiguration.ProviderName,
+                Name = DbConfiguration.Name
             };
         }
-
+        /*
         /// <summary>
         /// Initial Db connect
         /// </summary>
         /// <param name="argStrDbProviderName"></param>
         private void InitDbProvider(string argStrDbProviderName)
         {
-            InitDbProvider(InitDbConfig(argStrDbProviderName));
+            InitDbProvider(InitConnectionStringSetting(argStrDbProviderName));
         }
-
+        */
         /// <summary>
         /// Initial Db connect
         /// </summary>
@@ -97,9 +102,9 @@ namespace jIAnSoft.Framework.Brook
 #elif NETSTANDARD2_0
             _provider = DbProviderFactories.GetFactory(ConnectionSetting.ProviderName);
 #endif
-            Timeout = DbSet.CommandTimeOut;
+            //Timeout = DbConfiguration.CommandTimeOut;
         }
-
+        /*
         /// <summary>
         ///Get new SQL connection
         /// </summary>
@@ -109,7 +114,7 @@ namespace jIAnSoft.Framework.Brook
         {
             InitDbProvider(argStrDbProviderName);
             return GetConnection;
-        }
+        }*/
         
         /// <summary>
         /// 目前連線的資料庫位置
@@ -174,15 +179,13 @@ namespace jIAnSoft.Framework.Brook
             }
             return $"[{string.Join(" ,", t)}]";
         }
-
+        
         /// <summary>
-        /// 當查詢結束後進行的動作
+        /// 
         /// </summary>
         private void QueryCompleted()
         {
-            //移除參數設定
             Conn?.Close();
-            //Command?.Dispose();
         }
 
         private DbCommand GetCommand(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters)
@@ -198,32 +201,7 @@ namespace jIAnSoft.Framework.Brook
             }
             return cmd;
         }
-
-
-        /// <summary>
-        ///  Execute SQL and return a DataTable <see cref="DataTable"/>.
-        /// </summary>
-        /// <param name="sqlCmd">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        public DataTable Table(string sqlCmd, DbParameter[] parameters = null)
-        {
-            return Table(CommandType.Text, sqlCmd, parameters);
-        }
-
-        /// <summary>
-        ///  Execute SQL and return a DataTable <see cref="DataTable"/>.
-        /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        /// <returns></returns>
-        public DataTable Table(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
-        {
-            return Table(Timeout, commandType, sqlCmd, parameters);
-        }
-
+        
         /// <summary>
         ///  Execute SQL and return a DataTable <see cref="DataTable"/>.
         /// </summary>
@@ -232,41 +210,14 @@ namespace jIAnSoft.Framework.Brook
         /// <param name="sqlCmd">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public DataTable Table(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        internal DataTable Table(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            using (var reader = Reader(timeout, commandType, sqlCmd, parameters))
+            using (var ds = DataSet(timeout, commandType, sqlCmd, parameters))
             {
-                var dt = new DataTable();
-                dt.Load(reader);
-                reader.Close();
-                QueryCompleted();
-                return dt;
+                return ds.Tables[0];
             }
         }
-
-        /// <summary>
-        ///  Execute SQL and return first row data that type is <see cref="T"/>.
-        /// </summary>
-        /// <param name="sqlCmd">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        public T First<T>(string sqlCmd, DbParameter[] parameters = null)
-        {
-            return First<T>(CommandType.Text, sqlCmd, parameters);
-        }
-
-        /// <summary>
-        ///  Execute SQL and return first row data that type is <see cref="T"/>.
-        /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        public T First<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
-        {
-            return First<T>(Timeout, commandType, sqlCmd, parameters);
-        }
-
+        
         /// <summary>
         ///  Execute SQL and return first row data that type is <see cref="T"/>.
         /// </summary>
@@ -275,7 +226,7 @@ namespace jIAnSoft.Framework.Brook
         /// <param name="sqlCmd">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public T First<T>(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        internal T First<T>(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
             var classobj = default(T);
             using (var reader = Reader(timeout, commandType, sqlCmd, parameters))
@@ -288,37 +239,12 @@ namespace jIAnSoft.Framework.Brook
                         ReflectionHelpers.SetValue(classobj, reader.GetName(i), reader.GetValue(i));
                     }
                 }
-                reader.Dispose();
+                reader.Close();
                 QueryCompleted();
             }
             return classobj;
         }
-
-
-        /// <summary>
-        ///  Execute SQL and return a <see cref="T"/> array.
-        /// </summary>
-        /// <param name="sqlCmd">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-
-        public T[] Query<T>(string sqlCmd, DbParameter[] parameters = null)
-        {
-            return Query<T>(CommandType.Text, sqlCmd, parameters);
-        }
-
-        /// <summary>
-        ///  Execute SQL and return a <see cref="T"/> array.
-        /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        public T[] Query<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
-        {
-            return Query<T>(Timeout, commandType, sqlCmd, parameters);
-        }
-
+        
         /// <summary>
         ///  Execute SQL and return a <see cref="T"/> array.
         /// </summary>
@@ -327,7 +253,7 @@ namespace jIAnSoft.Framework.Brook
         /// <param name="sqlCmd">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public T[] Query<T>(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        internal List<T> Query<T>(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
             var re = new List<T>();
             using (var reader = Reader(timeout, commandType, sqlCmd, parameters))
@@ -344,41 +270,18 @@ namespace jIAnSoft.Framework.Brook
                 reader.Close();
                 QueryCompleted();
             }
-            return re.ToArray();
+            return re;
         }
-
+       
         /// <summary>
         /// Executes a SQL statement, and returns a value that from an operation such as a stored procedure, built-in function, or user-defined function.
         /// </summary>
-        /// <param name="sqlCmd">SQL command</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        public T Value<T>(string sqlCmd, DbParameter[] parameters = null)
-        {
-            return Value<T>(CommandType.Text, sqlCmd, parameters);
-        }
-
-        /// <summary>
-        /// Executes a SQL statement, and returns a value that from an operation such as a stored procedure, built-in function, or user-defined function.
-        /// </summary>
-        /// <param name="sqlCmd">SQL command</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <param name="argEmuCommandType">SQL command type SP、Text</param>
-        /// <returns></returns>
-        public T Value<T>(CommandType argEmuCommandType, string sqlCmd, DbParameter[] parameters = null)
-        {
-            return Value<T>(Timeout, argEmuCommandType, sqlCmd, parameters);
-        }
-
-        /// <summary>
-        /// Executes a SQL statement, and returns a value that from an operation such as a stored procedure, built-in function, or user-defined function.
-        /// </summary>
-        /// <param name="timeOut">Cmd timeout</param>
+        /// <param name="timeout">Cmd timeout</param>
         /// <param name="commandType">SQL command type SP、Text</param>
         /// <param name="sqlCmd">SQL command</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public T Value<T>(int timeOut, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        internal T Value<T>(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
             try
             {
@@ -396,7 +299,7 @@ namespace jIAnSoft.Framework.Brook
                 {
                     parames.AddRange(parameters);
                 }
-                Execute(timeOut, commandType, sqlCmd, parames.ToArray());
+                Execute(timeout, commandType, sqlCmd, parames.ToArray());
                 if (null == parame.Value)
                 {
                     return default(T);
@@ -405,41 +308,14 @@ namespace jIAnSoft.Framework.Brook
             }
             catch (Exception sqlEx)
             {
-                throw new SqlException(
-                    string.Format(
-                        new CultureInfo(Section.Get.Common.Culture.Name),
-                        "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
-                        sqlEx.Message,
-                        ConnectionSetting.Name,
-                        sqlCmd,
-                        PrintDbParameters(parameters)),
-                    sqlEx);
+                throw SqlException(sqlEx, sqlCmd, parameters);
+            }
+            finally
+            {
+                QueryCompleted();
             }
         }
-
-        /// <summary>
-        /// Executes a SQL statement against the connection and returns the number of rows affected.
-        /// </summary>
-        /// <param name="sqlCmd">SQL 指令</param>
-        /// <param name="parameters">SQL 指令參數</param>
-        /// <returns></returns>
-        public int Execute(string sqlCmd, DbParameter[] parameters = null)
-        {
-            return Execute(CommandType.Text, sqlCmd, parameters);
-        }
-
-        /// <summary>
-        /// Executes a SQL statement against the connection and returns the number of rows affected.
-        /// </summary>
-        /// <param name="sqlCmd">SQL command</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <returns></returns>
-        public int Execute(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
-        {
-            return Execute(Timeout, commandType, sqlCmd, parameters);
-        }
-
+       
         /// <summary>
         ///  Executes a SQL statement against the connection and returns the number of rows affected.
         /// </summary>
@@ -457,15 +333,7 @@ namespace jIAnSoft.Framework.Brook
             }
             catch (Exception sqlEx)
             {
-                throw new SqlException(
-                    string.Format(
-                        new CultureInfo(Section.Get.Common.Culture.Name),
-                        "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
-                        sqlEx.Message,
-                        ConnectionSetting.Name,
-                        sqlCmd,
-                        PrintDbParameters(parameters)),
-                    sqlEx);
+                throw SqlException(sqlEx, sqlCmd, parameters);
             }
             finally
             {
@@ -490,41 +358,10 @@ namespace jIAnSoft.Framework.Brook
             }
             catch (Exception sqlEx)
             {
-                throw new SqlException(
-                    string.Format(
-                        new CultureInfo(Section.Get.Common.Culture.Name),
-                        "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
-                        sqlEx.Message,
-                        ConnectionSetting.Name,
-                        sqlCmd,
-                        PrintDbParameters(parameters)),
-                    sqlEx);
+                throw SqlException(sqlEx, sqlCmd, parameters);
             }
         }
-
-        /// <summary>
-        /// 執行查詢後回傳第一列第一欄的的資料 V2.0
-        /// </summary>
-        /// <param name="sqlCmd">SQL 指令</param>
-        /// <param name="parameters">SQL 指令參數</param>
-        /// <returns></returns>
-        public T One<T>(string sqlCmd, DbParameter[] parameters = null)
-        {
-            return One<T>(CommandType.Text, sqlCmd, parameters);
-        }
-
-        /// <summary>
-        /// 執行查詢後回傳第一列第一欄的的資料 V2.0
-        /// </summary>
-        /// <param name="sqlCmd">SQL 指令</param>
-        /// <param name="parameters">SQL 指令參數</param>
-        /// <param name="commandType">SQL 執行模式 SP、Text</param>
-        /// <returns></returns>
-        public T One<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
-        {
-            return One<T>(Timeout, commandType, sqlCmd, parameters);
-        }
-
+        
         /// <summary>
         ///  Execute SQL and return an <see cref="T"/>.
         /// </summary>
@@ -535,37 +372,26 @@ namespace jIAnSoft.Framework.Brook
         /// <returns></returns>
         public T One<T>(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            var result = GetCommand(timeout, commandType, sqlCmd, parameters).ExecuteScalar();
-            if (null == result)
+            try
             {
-                return default(T);
+                var cmd = GetCommand(timeout, commandType, sqlCmd, parameters);
+                var result = cmd.ExecuteScalar();
+                if (null == result)
+                {
+                    return default(T);
+                }
+                return (T) Conversion.ConvertTo<T>(result);
             }
-            return (T) Conversion.ConvertTo<T>(result);
+            catch (Exception sqlEx)
+            {
+                throw SqlException(sqlEx, sqlCmd, parameters);
+            }
+            finally
+            {
+                QueryCompleted();
+            }
         }
-
-        /// <summary>
-        /// Execute SQL and return an <see cref="System.Data.DataSet"/>.
-        /// </summary>
-        /// <param name="sqlCmd">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        public DataSet DataSet(string sqlCmd, DbParameter[] parameters = null)
-        {
-            return DataSet(CommandType.Text, sqlCmd, parameters);
-        }
-
-        /// <summary>
-        ///  Execute SQL and return an <see cref="System.Data.DataSet"/>.
-        /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        public DataSet DataSet(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
-        {
-            return DataSet(Timeout, commandType, sqlCmd, parameters);
-        }
-
+       
         /// <summary>
         ///  Execute SQL and return an <see cref="System.Data.DataSet"/>.
         /// </summary>
@@ -583,7 +409,6 @@ namespace jIAnSoft.Framework.Brook
                     if (adapter == null)
                     {
                         throw new SqlException("DbProviderFactory can't create a new instance of the provider's class.");
-                       // return new DataSet();
                     }
                     using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
                     {
@@ -595,15 +420,7 @@ namespace jIAnSoft.Framework.Brook
             }
             catch (Exception sqlEx)
             {
-                throw new SqlException(
-                    string.Format(
-                        new CultureInfo(Section.Get.Common.Culture.Name),
-                        "{0} Source = {1}\n Cmd = {2}\n Param = {3}",
-                        sqlEx.Message,
-                        ConnectionSetting.Name,
-                        sqlCmd,
-                        PrintDbParameters(parameters)),
-                    sqlEx);
+                throw SqlException(sqlEx, sqlCmd, parameters);
             }
             finally
             {
@@ -611,6 +428,71 @@ namespace jIAnSoft.Framework.Brook
             }
         }
 
-        public abstract void Dispose();
+        /*
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="batchSize"></param>
+        public void Bulk(DataTable table, int batchSize = 2500)
+        {
+            using (var bulk = new SqlBulkCopy(ConnectionSource))
+            {
+                bulk.BatchSize = batchSize;
+                bulk.BulkCopyTimeout = 0;
+                bulk.DestinationTableName = $"[dbo].[{table.TableName}]";
+                foreach (DataColumn column in table.Columns)
+                {
+                    bulk.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+                }
+                try
+                {
+                    // Write from the source to the destination.
+                    bulk.WriteToServer(table);
+                }
+                catch (Exception sqlEx)
+                {
+                    throw new SqlException(
+                        string.Format(
+                            new CultureInfo(Section.Get.Common.Culture.Name),
+                            "{0} Source = {1}\n Table = {2}\n",
+                            sqlEx.Message,
+                            ConnectionSetting.Name,
+                            table.TableName
+                        ),
+                        sqlEx);
+                }
+            }
+        }*/
+
+        private SqlException SqlException(Exception sqlEx, string sqlCmd, DbParameter[] parameters = null)
+        {
+            return new SqlException(
+                string.Format(
+                    new CultureInfo(Section.Get.Common.Culture.Name),
+                    $"{sqlEx.Message} Source = {ConnectionSetting.Name}\n Cmd = {sqlCmd}\n Param = {PrintDbParameters(parameters)}"),
+                sqlEx);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (!disposing || _disposed) return;
+
+            if (null != Conn)
+            {
+                if (Conn.State != ConnectionState.Open)
+                {
+                    Conn.Close();
+                }
+                Conn.Dispose();
+                Conn = null;
+            }
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
     }
 }

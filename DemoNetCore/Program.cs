@@ -1,4 +1,5 @@
-﻿using jIAnSoft.Framework.Brook;
+﻿
+using jIAnSoft.Framework.Brook.Mapper;
 using MySql.Data.MySqlClient;
 using System;
 using System.Data;
@@ -6,65 +7,68 @@ using System.Data.Common;
 
 namespace DemoNetCore
 {
-    class Program
+    internal static class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
 
             try
             {
-                using (var db = new MsSql("Main"))
+                var postgreDs = Brook.Load("Eddie").DataSet("select * FROM \"public\".\"User\";select * FROM \"public\".\"User\";");
+                var postgreTable = Brook.Load("Eddie").Table("select * FROM \"public\".\"User\"");
+                foreach (DataRow row in postgreTable.Rows)
                 {
-                    var t = db.Table(
-                        "SELECT TOP (10) [AccountID],[AccountSN],[AccountType],[Account],[Password],[Status],[Verify],[Agent],[VIPLv],[CreateTime] FROM [MainDB].[dbo].[TB_Account]",
-                        new DbParameter[]
-                        {
+                    Console.WriteLine($"Postgre query {row[0]} {row[1]} {row[2]} {row[3]} {row[4]}");
+                }
+                var mssqlTable = Brook.Load("Main")
+                    .Table(
+                        "SELECT TOP (10) [AccountID],[AccountSN],[AccountType],[Account],[Password],[Status],[Verify],[Agent],[VIPLv],[CreateTime] FROM [MainDB].[dbo].[TB_Account]");
 
-                        });
-                    foreach (DataRow row in t.Rows)
-                    {
-                        Console.WriteLine($"{row[0]} {row[1]} {row[2]}");
-                    }
+                foreach (DataRow row in mssqlTable.Rows)
+                {
+                    Console.WriteLine($"{row[0]} {row[1]} {row[2]}");
                 }
 
-                using (var db = new jIAnSoft.Framework.Brook.MySql("Mr4"))
-                {
-                    var t = db.Table(
-                       "SELECT `id`,`email`,`name` FROM `pet_user` WHERE `id` = @id",
-                       new DbParameter[]
-                       {
-                           new MySqlParameter("@id",MySqlDbType.Int64)
-                           {
-                               Value = 1
-                           }
-                       });
-                    foreach (DataRow row in t.Rows)
-                    {
-                        Console.WriteLine($"{row[0]} {row[1]} {row[2]}");
-                    }
-                    var p = db.First<PetUser>("SELECT `id` AS `Id`,`email` AS `Email`,`name` AS `Name` FROM `mr4`.`pet_user` WHERE `id` = @id",
-                        new DbParameter[]
-                        {
-                            new MySqlParameter("@id", MySqlDbType.Int64)
-                            {
-                                Value = 1
-                            }
-                        });
-                    Console.WriteLine($"Id:{p.Id} Email:{p.Email} Name:{p.Name}");
 
-                    var ds = db.DataSet("SELECT `id` AS `Id`,`email` AS `Email`,`name`FROM `mr4`.`pet_user` WHERE `id` = @id;SELECT `id` AS `Id`,`email` AS `Email`,`name`FROM `mr4`.`pet_user` WHERE `id` = @id",
-                        new DbParameter[]
-                        {
-                            new MySqlParameter("@id", MySqlDbType.Int64)
-                            {
-                                Value = 2
-                            }
-                        });
-                    foreach (DataRow row in ds.Tables[1].Rows)
+
+                var t = Brook.Load("Mr4").Table(
+                    "SELECT `id`,`email`,`name` FROM `pet_user` WHERE `id` = @id",
+                    new DbParameter[]
                     {
-                        Console.WriteLine($"我是 ds.Tables {row[0]} {row[1]} {row[2]}");
-                    }
+                        new MySqlParameter("@id", MySqlDbType.Int64)
+                        {
+                            Value = 1
+                        }
+                    });
+                foreach (DataRow row in t.Rows)
+                {
+                    Console.WriteLine($"{row[0]} {row[1]} {row[2]}");
                 }
+                var p = Brook.Load("Mr4").First<PetUser>(
+                    "SELECT `id` AS `Id`,`email` AS `Email`,`name` AS `Name` FROM `mr4`.`pet_user` WHERE `id` = @id",
+                    new DbParameter[]
+                    {
+                        new MySqlParameter("@id", MySqlDbType.Int64)
+                        {
+                            Value = 1
+                        }
+                    });
+                Console.WriteLine($"Id:{p.Id} Email:{p.Email} Name:{p.Name}");
+
+                var ds = Brook.Load("Mr4").DataSet(
+                    "SELECT `id` AS `Id`,`email` AS `Email`,`name`FROM `mr4`.`pet_user` WHERE `id` = @id;SELECT `id` AS `Id`,`email` AS `Email`,`name`FROM `mr4`.`pet_user` WHERE `id` = @id",
+                    new DbParameter[]
+                    {
+                        new MySqlParameter("@id", MySqlDbType.Int64)
+                        {
+                            Value = 2
+                        }
+                    });
+                foreach (DataRow row in ds.Tables[1].Rows)
+                {
+                    Console.WriteLine($"我是 ds.Tables {row[0]} {row[1]} {row[2]}");
+                }
+
 
             }
             catch (Exception ex)

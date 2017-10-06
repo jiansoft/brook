@@ -3,7 +3,7 @@
 #if NET451
     using System;
     using System.Configuration;
-    public sealed class DatabaseSet : ConfigurationElement
+    public sealed class DatabaseConfiguration : ConfigurationElement
     {
         /// <summary>
         /// 連線字串
@@ -31,7 +31,7 @@
     }
 
 #elif NETSTANDARD2_0
-    public sealed class DatabaseSet 
+    public sealed class DatabaseConfiguration 
     {
         public string Connection { get; set; }
         public string Name { get; set; }

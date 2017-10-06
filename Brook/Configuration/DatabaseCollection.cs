@@ -8,18 +8,18 @@ namespace jIAnSoft.Framework.Brook.Configuration
     {
         protected override ConfigurationElement CreateNewElement()
         {
-            return new DatabaseSet();
+            return new DatabaseConfiguration();
         }
 
         protected override object GetElementKey(ConfigurationElement element)
         {
-            return ((DatabaseSet)element).Name;
+            return ((DatabaseConfiguration)element).Name;
         }
 
         public override ConfigurationElementCollectionType CollectionType => ConfigurationElementCollectionType.AddRemoveClearMap;
         public static DatabaseCollection Get { get; set; }
 
-        public new DatabaseSet this[string name] => (DatabaseSet)BaseGet(name);
+        public new DatabaseConfiguration this[string name] => (DatabaseConfiguration)BaseGet(name);
 
         public bool ContainsKey(string key)
         {
@@ -36,11 +36,11 @@ namespace jIAnSoft.Framework.Brook.Configuration
         public static DatabaseCollection Get => _instance ?? (_instance = new DatabaseCollection());
       
 
-        public DatabaseSet this[string name] => Database[name];
+        public DatabaseConfiguration this[string name] => Database[name];
 
-        private Dictionary<string, DatabaseSet> Database { get; set; }
+        private Dictionary<string, DatabaseConfiguration> Database { get; set; }
 
-        internal void SetDatabaseCollection(Dictionary<string, DatabaseSet> dic)
+        internal void SetDatabaseCollection(Dictionary<string, DatabaseConfiguration> dic)
         {
             Database = dic;
         }

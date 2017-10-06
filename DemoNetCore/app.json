@@ -19,6 +19,12 @@
       "Connection": "server=10.99.1.141;database=MainDB;uid=sa;pwd=35Ewag#p3x;Connection Timeout=5;",
       "ProviderName": "System.Data.SqlClient",
       "CommandTimeOut": 15
+    },
+    {
+      "Name": "Eddie",
+      "Connection": "server=127.0.0.1;uid=postgres;pwd=1qaz@WSX;database=Eddie;",
+      "ProviderName": "Npgsql",
+      "CommandTimeOut": 15
     }
   ],
   "key": "7533967",

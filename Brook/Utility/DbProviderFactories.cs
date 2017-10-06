@@ -37,7 +37,7 @@ namespace jIAnSoft.Framework.Brook.Utility
                     }
                 },
                 {
-                    "Npgsql Data Provider",
+                    "Npgsql",
                     new DbProviderFactoryConfigItem
                     {
                         Name = "Npgsql Data Provider",

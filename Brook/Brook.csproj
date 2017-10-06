@@ -1,17 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Brook</PackageId>
+    <PackageId>jIAnSoft.Brook</PackageId>
     <PackageTags>micro sql helper</PackageTags>
     <Title>Brook</Title>
-    <Description>A high performance micro sql helper supporting SQL Server、MySQL</Description>
+    <Description>A high performance micro sql helper supporting SQL Server、MySQL、PostgreSQL</Description>
     <Authors>Eddie</Authors>
    <TargetFrameworks>net451;netstandard2.0</TargetFrameworks>
    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
    <RootNamespace>jIAnSoft.Framework.Brook</RootNamespace>
-   <AssemblyVersion>17.10.5</AssemblyVersion>
-   <FileVersion>17.10.5</FileVersion>
-   <Version>17.10.5</Version>
+   <AssemblyVersion>17.10.6</AssemblyVersion>
+   <FileVersion>17.10.6</FileVersion>
+   <Version>17.10.6</Version>
    <PackageLicenseUrl>https://github.com/jiansoft/brook/blob/master/LICENSE</PackageLicenseUrl>
    <Copyright>Copyright © jIAnSoft 2017</Copyright>
    <PackageProjectUrl>https://github.com/jiansoft/brook</PackageProjectUrl>
@@ -19,6 +19,8 @@
    <RepositoryType>git</RepositoryType>
    <Company>jIAnSoft</Company>
    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+   <AssemblyName>Brook</AssemblyName>
+   <Product>jIAnSoft.Brook</Product>
    
   </PropertyGroup>
 
