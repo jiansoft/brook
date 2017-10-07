@@ -53,8 +53,8 @@ Parameters format like below.
 var postgreDs = Brook.Load("postgresql").DataSet("select * FROM \"public\".\"User\";select * FROM \"public\".\"User\";");
 
 //Get query data as DataTable
-var postgreTable= Brook.Load("postgresql").Table("select * FROM \"public\".\"User\"");
-var mysqlTable= Brook.Load("mysql").Table(
+var postgreTable = Brook.Load("postgresql").Table("select * FROM \"public\".\"User\"");
+var mysqlTable = Brook.Load("mysql").Table(
                     "SELECT `id`,`email`,`name` FROM `pet_user` WHERE `id` = @id",
                     new DbParameter[]
                     {
@@ -64,7 +64,7 @@ var mysqlTable= Brook.Load("mysql").Table(
                         }
                     });
 //Insert、Update、Delete operation 
-var postgreTable= Brook.Load("mysql").Execute(
+var count = Brook.Load("mysql").Execute(
                     "INSERT INTO `pet_user`( `id`,`email`,`name`)VALUES(@id,@email,@name);"
                     new DbParameter[]
                     {
@@ -81,7 +81,16 @@ var postgreTable= Brook.Load("mysql").Execute(
                             Value = "Eddie"
                         }
                     });
-var postgreTable= Brook.Load("mssql").Execute("DELETE FROM User WHERE ststus = 0");
+var count = Brook.Load("mssql").Execute("DELETE FROM User WHERE ststus = 0");
+var one = Brook.Load("mssql").One<int>("SELECT COUNT(*) FROM User");
+var obj = Brook.Load("mssql").First<UserEntityclass>("SELECT [Id],[Name] FROM User WHERE Id=1");
+var objs = Brook.Load("mssql").Query<UserEntityclass>("SELECT [Id],[Name] FROM User");
+
+public class UserEntityclass
+{
+    public long Id {get;set;}
+    public string Name {get;set;}
+}
 ```
 You can see the full code in DemoNetFramework.
 
