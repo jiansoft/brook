@@ -174,12 +174,14 @@ namespace jIAnSoft.Framework.Brook
             //[{ Key: "@MatchID",Val: "12199414"}]
             foreach (var p in parameters)
             {
-                t[i] = $"{{Key:'{p.ParameterName}',Val:'{p.Value.ToString().Replace("\"", "\\\"")}'}}";
+                var key = p.ParameterName ?? "null";
+                var value = p.Value ?? "null";
+                t[i] = $"{{Key:'{key}',Val:'{value.ToString().Replace("\"", "\\\"")}'}}";
                 i++;
             }
             return $"[{string.Join(" ,", t)}]";
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -260,12 +262,36 @@ namespace jIAnSoft.Framework.Brook
             {
                 while (reader.Read())
                 {
-                    var classobj = Activator.CreateInstance<T>();
                     for (var i = reader.FieldCount - 1; i >= 0; i--)
                     {
+                        if (reader.GetValue(i) is T variable)
+                        {
+                            re.Add(variable);
+                            continue;
+                        }
+                        if (typeof(T).IsPrimitive())
+                        {
+                            re.Add((T) Convert.ChangeType(reader.GetValue(i), typeof(T)));
+                            continue;
+                        }
+                        if (!typeof(T).IsConstructedGenericType())
+                        {
+                            re.Add((T) reader.GetValue(i));
+                            continue;
+                        }
+                        if (typeof(T).IsNullable())
+                        {
+                            var type = typeof(T).GetGenericTypeArguments()[0];
+                            if (type.IsPrimitive())
+                            {
+                                re.Add((T) Convert.ChangeType(reader.GetValue(i), type));
+                                continue;
+                            }
+                        }
+                        var classobj = Activator.CreateInstance<T>();
                         ReflectionHelpers.SetValue(classobj, reader.GetName(i), reader.GetValue(i));
+                        re.Add(classobj);
                     }
-                    re.Add(classobj);
                 }
                 reader.Close();
                 QueryCompleted();
