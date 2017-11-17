@@ -491,13 +491,10 @@ namespace jIAnSoft.Framework.Brook
             }
         }*/
 
-        private SqlException SqlException(Exception sqlEx, string sqlCmd, DbParameter[] parameters = null)
+        private SqlException SqlException(Exception sqlEx, string sqlCmd, IReadOnlyCollection<DbParameter> parameters = null)
         {
-            return new SqlException(
-                string.Format(
-                    new CultureInfo(Section.Get.Common.Culture.Name),
-                    $"{sqlEx.Message} Source = {ConnectionSetting.Name}\n Cmd = {sqlCmd}\n Param = {PrintDbParameters(parameters)}"),
-                sqlEx);
+            var errStr = $"{sqlEx.Message} Source = {ConnectionSetting.Name}\n Cmd = {sqlCmd}\n Param = {PrintDbParameters(parameters)}";
+            return new SqlException(errStr,sqlEx);
         }
 
         private void Dispose(bool disposing)
