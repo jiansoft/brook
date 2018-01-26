@@ -246,7 +246,7 @@ namespace jIAnSoft.Framework.Brook
             }
             return classobj;
         }
-        
+
         /// <summary>
         ///  Execute SQL and return a <see cref="T"/> array.
         /// </summary>
@@ -262,43 +262,51 @@ namespace jIAnSoft.Framework.Brook
             {
                 while (reader.Read())
                 {
+                    var classobj = Activator.CreateInstance<T>();
                     for (var i = reader.FieldCount - 1; i >= 0; i--)
                     {
-                        if (reader.GetValue(i) is T variable)
-                        {
-                            re.Add(variable);
-                            continue;
-                        }
-                        if (typeof(T).IsPrimitive())
-                        {
-                            re.Add((T) Convert.ChangeType(reader.GetValue(i), typeof(T)));
-                            continue;
-                        }
-                        if (!typeof(T).IsConstructedGenericType())
-                        {
-                            re.Add((T) reader.GetValue(i));
-                            continue;
-                        }
-                        if (typeof(T).IsNullable())
-                        {
-                            var type = typeof(T).GetGenericTypeArguments()[0];
-                            if (type.IsPrimitive())
-                            {
-                                re.Add((T) Convert.ChangeType(reader.GetValue(i), type));
-                                continue;
-                            }
-                        }
-                        var classobj = Activator.CreateInstance<T>();
                         ReflectionHelpers.SetValue(classobj, reader.GetName(i), reader.GetValue(i));
-                        re.Add(classobj);
                     }
+                    re.Add(classobj);
+                    //                    for (var i = reader.FieldCount - 1; i >= 0; i--)
+                    //                    {
+                    //                        if (reader.GetValue(i) is T variable)
+                    //                        {
+                    //                            re.Add(variable);
+                    //                            continue;
+                    //                        }
+                    //                        if (typeof(T).IsPrimitive())
+                    //                        {
+                    //                            re.Add((T) Convert.ChangeType(reader.GetValue(i), typeof(T)));
+                    //                            continue;
+                    //                        }
+                    //                        if (!typeof(T).IsConstructedGenericType())
+                    //                        {
+                    //                            re.Add((T) reader.GetValue(i));
+                    //                            continue;
+                    //                        }
+                    //                        if (typeof(T).IsNullable())
+                    //                        {
+                    //                            var type = typeof(T).GetGenericTypeArguments()[0];
+                    //                            if (type.IsPrimitive())
+                    //                            {
+                    //                                re.Add((T) Convert.ChangeType(reader.GetValue(i), type));
+                    //                                continue;
+                    //                            }
+                    //                        }
+                    //                        var classobj = Activator.CreateInstance<T>();
+                    //                        ReflectionHelpers.SetValue(classobj, reader.GetName(i), reader.GetValue(i));
+                    //                        re.Add(classobj);
+                    //                    }
                 }
+
                 reader.Close();
                 QueryCompleted();
             }
+
             return re;
         }
-       
+
         /// <summary>
         /// Executes a SQL statement, and returns a value that from an operation such as a stored procedure, built-in function, or user-defined function.
         /// </summary>
