@@ -1,4 +1,4 @@
-﻿namespace jIAnSoft.Framework.Brook.Mapper
+﻿namespace jIAnSoft.Brook.Mapper
 {
     public static class Brook
     {

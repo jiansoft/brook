@@ -1,4 +1,4 @@
-﻿namespace jIAnSoft.Framework.Brook.Configuration
+﻿namespace jIAnSoft.Brook.Configuration
 {
 #if NET451
     using System;

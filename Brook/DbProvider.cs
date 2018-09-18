@@ -1,5 +1,5 @@
-﻿using jIAnSoft.Framework.Brook.Configuration;
-using jIAnSoft.Framework.Brook.Utility;
+﻿using jIAnSoft.Brook.Configuration;
+using jIAnSoft.Brook.Utility;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -9,7 +9,7 @@ using System.Data.Common;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace jIAnSoft.Framework.Brook
+namespace jIAnSoft.Brook
 {
     public class DbProvider : ProviderBase, IDisposable
     {

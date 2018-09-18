@@ -3,7 +3,7 @@
 using System;
 using System.Globalization;
 
-namespace jIAnSoft.Framework.Brook.Configuration
+namespace jIAnSoft.Brook.Configuration
 {
 #if NET451
     using System.Configuration;
@@ -26,18 +26,17 @@ namespace jIAnSoft.Framework.Brook.Configuration
                 }
                 catch (Exception)
                 {
-                    _culture = new CultureInfo("zh-TW");
+                    // _culture = new CultureInfo("zh-TW");
+                    _culture = CultureInfo.CurrentCulture;
                 }
                 return _culture;
             }
         }
 
-
         [ConfigurationProperty("timezone", DefaultValue = "Taipei Standard Time", IsRequired = false)]
         private string Timezone => Convert.ToString(base["timezone"]);
 
         private static TimeZoneInfo _timeZoneInfo;
-
 
         /// <summary>
         /// 時區設定
@@ -53,8 +52,9 @@ namespace jIAnSoft.Framework.Brook.Configuration
                 }
                 catch (Exception)
                 {
-                    return _timeZoneInfo ??
-                           (_timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Taipei Standard Time"));
+//                    return _timeZoneInfo ??
+//                           (_timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Taipei Standard Time"));
+                    return TimeZoneInfo.Local;
 
                 }
             }
@@ -72,21 +72,38 @@ namespace jIAnSoft.Framework.Brook.Configuration
     {
         public Common(string culture, string timezone)
         {
-            try
-            { 
-                 TimeZone = TimeZoneInfo.FindSystemTimeZoneById(timezone);
-            }
-            catch (Exception)
+            if (!string.IsNullOrEmpty(timezone))
             {
-                TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Taipei Standard Time");
+                try
+                {
+                    TimeZone = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+                }
+                catch (Exception)
+                {
+                    TimeZone = TimeZoneInfo.Local;
+                    //TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Taipei");
+                }
             }
-            try
+            else
             {
-                Culture = new CultureInfo(culture);
+                TimeZone = TimeZoneInfo.Local;
             }
-            catch (Exception)
+
+            if (!string.IsNullOrEmpty(culture))
             {
-                Culture = new CultureInfo("zh-TW");
+                try
+                {
+                    Culture = new CultureInfo(culture);
+                }
+                catch (Exception)
+                {
+                    //Culture = new CultureInfo("zh-TW");
+                    Culture = CultureInfo.CurrentCulture;
+                }
+            }
+            else
+            {
+                Culture = CultureInfo.CurrentCulture;
             }
         }
 

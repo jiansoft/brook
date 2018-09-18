@@ -4,7 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 
-namespace jIAnSoft.Framework.Brook.Utility
+namespace jIAnSoft.Brook.Utility
 {
     public static class ReflectionHelpers
     {

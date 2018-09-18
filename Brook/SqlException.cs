@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace jIAnSoft.Framework.Brook
+namespace jIAnSoft.Brook
 {
     /// <inheritdoc />
     /// <summary>

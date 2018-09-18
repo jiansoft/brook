@@ -18,7 +18,7 @@ Parameters format like below.
 <configuration>
   <configSections>
     <sectionGroup name="jIAnSoft">
-      <section name="framework" type="jIAnSoft.Framework.Brook.Configuration.Section, Brook"/>
+      <section name="framework" type="jIAnSoft.Brook.Configuration.Section, Brook"/>
     </sectionGroup>
   </configSections>
   <jIAnSoft>
@@ -37,8 +37,9 @@ Parameters format like below.
   <system.data>
     <DbProviderFactories>
         <!-- If use MySQL, Need register MySql's provider factory-->
-        <remove invariant="MySql.Data.MySqlClient"/>     
-        <add name="MySQL Data Provider" invariant="MySql.Data.MySqlClient" description=".Net Framework Data Provider for MySQL" type="MySql.Data.MySqlClient.MySqlClientFactory, MySql.Data, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d"/>
+        <!-- ** only MySql's provider version 6.9.x series can be used **-->
+        <remove invariant="MySql.Data.MySqlClient" />
+        <add name="MySQL Data Provider" invariant="MySql.Data.MySqlClient" description=".Net Framework Data Provider for MySQL" type="MySql.Data.MySqlClient.MySqlClientFactory, MySql.Data, Version=6.9.12.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d" />
         <!-- If use PostgreSQL, Need register Npgsql's provider factory -->
         <remove invariant="Npgsql"/>
         <add name="Npgsql Data Provider" invariant="Npgsql" description="Data Provider for PostgreSQL" type="Npgsql.NpgsqlFactory, Npgsql" />
@@ -50,49 +51,51 @@ Parameters format like below.
 3.Use examples
 ``` csharp
 //Get query data as DataSet
-var postgreDs = Brook.Load("postgresql").DataSet("select * FROM \"public\".\"User\";select * FROM \"public\".\"User\";");
+var postgreDs = Brook.Load("postgresql").DataSet("select * FROM \"public\".\"account\";select * FROM \"public\".\"account\";");
 
 //Get query data as DataTable
-var postgreTable = Brook.Load("postgresql").Table("select * FROM \"public\".\"User\"");
-var mysqlTable = Brook.Load("mysql").Table(
-                    "SELECT `id`,`email`,`name` FROM `pet_user` WHERE `id` = @id",
-                    new DbParameter[]
-                    {
-                        new MySqlParameter("@id", MySqlDbType.Int32)
-                        {
-                            Value = 1
-                        }
-                    });
+var postgreTable = Brook.Load("postgresql").Table("select * FROM \"public\".\"account\"");
+var mysqlTable = Brook.Load("postgresql").Table(
+    "SELECT `id`,`email`,`name` FROM `account` WHERE `id` = @id;",
+    new DbParameter[]
+    {
+        new NpgsqlParameter("@id", MySqlDbType.Int32)
+        {
+            Value = 1
+        }
+    });
+
 //Insert、Update、Delete operation 
 var count = Brook.Load("mysql").Execute(
-                    "INSERT INTO `pet_user`( `id`,`email`,`name`)VALUES(@id,@email,@name);"
-                    new DbParameter[]
-                    {
-                        new MySqlParameter("@id", MySqlDbType.Int32)
-                        {
-                            Value = 1
-                        },
-                         new MySqlParameter("@email", MySqlDbType.VarChar)
-                        {
-                            Value = "Email@3q.com"
-                        },
-                         new MySqlParameter("@name", MySqlDbType.VarChar)
-                        {
-                            Value = "Eddie"
-                        }
-                    });
-var count = Brook.Load("mssql").Execute("DELETE FROM User WHERE ststus = 0");
-var one = Brook.Load("mssql").One<int>("SELECT COUNT(*) FROM User");
-var obj = Brook.Load("mssql").First<UserEntityclass>("SELECT [Id],[Name] FROM User WHERE Id=1");
-var objs = Brook.Load("mssql").Query<UserEntityclass>("SELECT [Id],[Name] FROM User");
+    "INSERT INTO `account`(`id`,`email`,`name`)VALUES(@id,@email,@name);"
+    new DbParameter[]
+    {
+        new MySqlParameter("@id", MySqlDbType.Int32)
+        {
+            Value = 1
+        },
+        new MySqlParameter("@email", MySqlDbType.VarChar)
+        {
+            Value = "email@3q.com"
+        },
+        new MySqlParameter("@name", MySqlDbType.VarChar)
+        {
+            Value = "example"
+        }
+    });
+var count = Brook.Load("mssql").Execute("DELETE FROM [account] WHERE [Id] = 0");
+var one = Brook.Load("mssql").One<int>("SELECT COUNT(*) FROM Account");
+var obj = Brook.Load("mssql").First<Account>("SELECT [Id],[Name],[Email] FROM [account] WHERE Id=1");
+var objs = Brook.Load("mssql").Query<Account>("SELECT [Id],[Name],[Email] FROM [account]");
 
-public class UserEntityclass
+public class Account
 {
-    public long Id {get;set;}
-    public string Name {get;set;}
+    public long Id { get; set; }
+    public string Email { get; set; }
+    public string Name { get; set; }
 }
 ```
-You can see the full code in DemoNetFramework.
+You can see the example code in both DemoNetFramework and DemoNetCore demo projects.
 
 ## License
 

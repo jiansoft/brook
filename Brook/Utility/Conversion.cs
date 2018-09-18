@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace jIAnSoft.Framework.Brook.Utility
+namespace jIAnSoft.Brook.Utility
 {
     internal static class Conversion
     {

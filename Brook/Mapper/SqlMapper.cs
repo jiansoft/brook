@@ -1,9 +1,9 @@
-﻿using jIAnSoft.Framework.Brook.Configuration;
+﻿using jIAnSoft.Brook.Configuration;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 
-namespace jIAnSoft.Framework.Brook.Mapper
+namespace jIAnSoft.Brook.Mapper
 {
     public class SqlMapper
     {

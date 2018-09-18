@@ -4,7 +4,7 @@ using System.Data.Common;
 using System.Reflection;
 
 #if NETSTANDARD2_0
-namespace jIAnSoft.Framework.Brook.Utility
+namespace jIAnSoft.Brook.Utility
 {
     public static class DbProviderFactories
     {

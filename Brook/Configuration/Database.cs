@@ -1,6 +1,6 @@
 ﻿using System.Configuration;
 
-namespace jIAnSoft.Framework.Brook.Configuration
+namespace jIAnSoft.Brook.Configuration
 {
     public sealed class Database : ConfigurationElement
     {
