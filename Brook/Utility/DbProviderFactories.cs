@@ -48,7 +48,7 @@ namespace jIAnSoft.Framework.Brook.Utility
                 }
             };
         }
-
+        
         public static DbProviderFactory GetFactory(string providerInvariantName)
         {
             if (string.IsNullOrWhiteSpace(providerInvariantName))
@@ -63,7 +63,7 @@ namespace jIAnSoft.Framework.Brook.Utility
             {
                 throw new NotImplementedException("Provider not installed");
             }
-            //todo need add object cache
+           
             var field = type.GetField("Instance",
                 BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public);
 
@@ -71,6 +71,7 @@ namespace jIAnSoft.Framework.Brook.Utility
             {
                 throw new InvalidCastException("Provider invalid");
             }
+
             var obj = field.GetValue(null);
             if (obj != null)
             {

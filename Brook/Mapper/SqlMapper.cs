@@ -87,10 +87,10 @@ namespace jIAnSoft.Framework.Brook.Mapper
         /// <returns></returns>
         public DataTable Table(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db))
-            {
-                return db.Table(timeout, commandType, sqlCmd, parameters);
-            }
+//            using (var db = new DbProvider(_db))
+//            {
+            return DataSet(timeout, commandType, sqlCmd, parameters).Tables[0];
+//            }
         }
 
         public DataSet DataSet(string sqlCmd, DbParameter[] parameters = null)

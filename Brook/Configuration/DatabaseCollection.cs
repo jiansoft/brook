@@ -34,7 +34,6 @@ namespace jIAnSoft.Framework.Brook.Configuration
         private static DatabaseCollection _instance;
 
         public static DatabaseCollection Get => _instance ?? (_instance = new DatabaseCollection());
-      
 
         public DatabaseConfiguration this[string name] => Database[name];
 

@@ -1,6 +1,5 @@
 ﻿using jIAnSoft.Framework.Brook.Configuration;
 using jIAnSoft.Framework.Brook.Utility;
-
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -40,7 +39,7 @@ namespace jIAnSoft.Framework.Brook
         {
             InitDbProvider(InitConnectionStringSetting(argStrDbProviderName));
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -50,7 +49,8 @@ namespace jIAnSoft.Framework.Brook
         /// <param name="argStrPassword"></param>
         /// <param name="argStrDbName"></param>
         /// <param name="providerName"></param>
-        public DbProvider(string argStrHost, int argIntPort, string argStrDbName, string argStrUser, string argStrPassword,string providerName)
+        public DbProvider(string argStrHost, int argIntPort, string argStrDbName, string argStrUser,
+            string argStrPassword, string providerName)
             : this(new ConnectionStringSettings
             {
                 ConnectionString =
@@ -61,7 +61,6 @@ namespace jIAnSoft.Framework.Brook
         {
         }
 
-
         internal DbProvider(ConnectionStringSettings argDbConfig)
         {
             InitDbProvider(argDbConfig);
@@ -71,7 +70,7 @@ namespace jIAnSoft.Framework.Brook
         /// Initial ConnectionSetting 
         /// </summary>
         protected ConnectionStringSettings InitConnectionStringSetting(string argStrDbProviderName)
-        {            
+        {
             DbConfiguration = Section.Get.Database.Which[argStrDbProviderName];
             return new ConnectionStringSettings
             {
@@ -80,6 +79,7 @@ namespace jIAnSoft.Framework.Brook
                 Name = DbConfiguration.Name
             };
         }
+
         /*
         /// <summary>
         /// Initial Db connect
@@ -100,6 +100,7 @@ namespace jIAnSoft.Framework.Brook
 #if NET451
             _provider = System.Data.Common.DbProviderFactories.GetFactory(ConnectionSetting.ProviderName);
 #elif NETSTANDARD2_0
+
             _provider = DbProviderFactories.GetFactory(ConnectionSetting.ProviderName);
 #endif
             //Timeout = DbConfiguration.CommandTimeOut;
@@ -115,7 +116,7 @@ namespace jIAnSoft.Framework.Brook
             InitDbProvider(argStrDbProviderName);
             return GetConnection;
         }*/
-        
+
         /// <summary>
         /// 目前連線的資料庫位置
         /// </summary>
@@ -179,6 +180,7 @@ namespace jIAnSoft.Framework.Brook
                 t[i] = $"{{Key:'{key}',Val:'{value.ToString().Replace("\"", "\\\"")}'}}";
                 i++;
             }
+
             return $"[{string.Join(" ,", t)}]";
         }
 
@@ -201,9 +203,11 @@ namespace jIAnSoft.Framework.Brook
             {
                 cmd.Parameters.AddRange(parameters);
             }
+
             return cmd;
         }
-        
+
+        /*
         /// <summary>
         ///  Execute SQL and return a DataTable <see cref="DataTable"/>.
         /// </summary>
@@ -214,12 +218,10 @@ namespace jIAnSoft.Framework.Brook
         /// <returns></returns>
         internal DataTable Table(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            using (var ds = DataSet(timeout, commandType, sqlCmd, parameters))
-            {
-                return ds.Tables[0];
-            }
+            return DataSet(timeout, commandType, sqlCmd, parameters).Tables[0];
         }
-        
+        */
+
         /// <summary>
         ///  Execute SQL and return first row data that type is <see cref="T"/>.
         /// </summary>
@@ -230,21 +232,23 @@ namespace jIAnSoft.Framework.Brook
         /// <returns></returns>
         internal T First<T>(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            var classobj = default(T);
+            var instance = default(T);
             using (var reader = Reader(timeout, commandType, sqlCmd, parameters))
             {
                 if (reader.Read())
                 {
-                    classobj = Activator.CreateInstance<T>();
+                    instance = Activator.CreateInstance<T>();
                     for (var i = reader.FieldCount - 1; i >= 0; i--)
                     {
-                        ReflectionHelpers.SetValue(classobj, reader.GetName(i), reader.GetValue(i));
+                        ReflectionHelpers.SetValue(instance, reader.GetName(i), reader.GetValue(i));
                     }
                 }
+
                 reader.Close();
                 QueryCompleted();
             }
-            return classobj;
+
+            return instance;
         }
 
         /// <summary>
@@ -262,12 +266,13 @@ namespace jIAnSoft.Framework.Brook
             {
                 while (reader.Read())
                 {
-                    var classobj = Activator.CreateInstance<T>();
+                    var instance = Activator.CreateInstance<T>();
                     for (var i = reader.FieldCount - 1; i >= 0; i--)
                     {
-                        ReflectionHelpers.SetValue(classobj, reader.GetName(i), reader.GetValue(i));
+                        ReflectionHelpers.SetValue(instance, reader.GetName(i), reader.GetValue(i));
                     }
-                    re.Add(classobj);
+
+                    re.Add(instance);
                     //                    for (var i = reader.FieldCount - 1; i >= 0; i--)
                     //                    {
                     //                        if (reader.GetValue(i) is T variable)
@@ -319,26 +324,27 @@ namespace jIAnSoft.Framework.Brook
         {
             try
             {
-                //準備接收回傳值的參數
-                var parame = _provider.CreateParameter();
-                if (parame == null) return default(T);
-                parame.ParameterName = "@ReturnValue";
-                parame.DbType = DbType.String;
-                parame.Direction = ParameterDirection.ReturnValue;
-                parame.IsNullable = true;
-                parame.SourceColumn = string.Empty;
-                parame.SourceVersion = DataRowVersion.Default;
-                var parames = new List<DbParameter> {parame};
+                var dbParameter = _provider.CreateParameter();
+                if (dbParameter == null) return default(T);
+                dbParameter.ParameterName = "@ReturnValue";
+                dbParameter.DbType = DbType.String;
+                dbParameter.Direction = ParameterDirection.ReturnValue;
+                dbParameter.IsNullable = true;
+                dbParameter.SourceColumn = string.Empty;
+                dbParameter.SourceVersion = DataRowVersion.Default;
+                var dbParameters = new List<DbParameter> {dbParameter};
                 if (parameters != null)
                 {
-                    parames.AddRange(parameters);
+                    dbParameters.AddRange(parameters);
                 }
-                Execute(timeout, commandType, sqlCmd, parames.ToArray());
-                if (null == parame.Value)
+
+                Execute(timeout, commandType, sqlCmd, dbParameters.ToArray());
+                if (null == dbParameter.Value)
                 {
                     return default(T);
                 }
-                return (T) Conversion.ConvertTo<T>(parame.Value);
+
+                return (T) Conversion.ConvertTo<T>(dbParameter.Value);
             }
             catch (Exception sqlEx)
             {
@@ -349,7 +355,7 @@ namespace jIAnSoft.Framework.Brook
                 QueryCompleted();
             }
         }
-       
+
         /// <summary>
         ///  Executes a SQL statement against the connection and returns the number of rows affected.
         /// </summary>
@@ -383,7 +389,8 @@ namespace jIAnSoft.Framework.Brook
         /// <param name="sqlCmd">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        private DbDataReader Reader(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        private DbDataReader Reader(int timeout, CommandType commandType, string sqlCmd,
+            DbParameter[] parameters = null)
         {
             try
             {
@@ -395,7 +402,7 @@ namespace jIAnSoft.Framework.Brook
                 throw SqlException(sqlEx, sqlCmd, parameters);
             }
         }
-        
+
         /// <summary>
         ///  Execute SQL and return an <see cref="T"/>.
         /// </summary>
@@ -414,6 +421,7 @@ namespace jIAnSoft.Framework.Brook
                 {
                     return default(T);
                 }
+
                 return (T) Conversion.ConvertTo<T>(result);
             }
             catch (Exception sqlEx)
@@ -425,7 +433,7 @@ namespace jIAnSoft.Framework.Brook
                 QueryCompleted();
             }
         }
-       
+
         /// <summary>
         ///  Execute SQL and return an <see cref="System.Data.DataSet"/>.
         /// </summary>
@@ -442,8 +450,10 @@ namespace jIAnSoft.Framework.Brook
                 {
                     if (adapter == null)
                     {
-                        throw new SqlException("DbProviderFactory can't create a new instance of the provider's class.");
+                        throw new SqlException(
+                            "DbProviderFactory can't create a new instance of the provider's DataAdapter class.");
                     }
+
                     using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
                     {
                         adapter.SelectCommand = GetCommand(timeout, commandType, sqlCmd, parameters);
@@ -499,10 +509,12 @@ namespace jIAnSoft.Framework.Brook
             }
         }*/
 
-        private SqlException SqlException(Exception sqlEx, string sqlCmd, IReadOnlyCollection<DbParameter> parameters = null)
+        private SqlException SqlException(Exception sqlEx, string sqlCmd,
+            IReadOnlyCollection<DbParameter> parameters = null)
         {
-            var errStr = $"{sqlEx.Message} Source = {ConnectionSetting.Name}\n Cmd = {sqlCmd}\n Param = {PrintDbParameters(parameters)}";
-            return new SqlException(errStr,sqlEx);
+            var errStr =
+                $"{sqlEx.Message}\nSource = {ConnectionSetting.Name}\nCmd = {sqlCmd}\nParam = {PrintDbParameters(parameters)}";
+            return new SqlException(errStr, sqlEx);
         }
 
         private void Dispose(bool disposing)
@@ -515,9 +527,11 @@ namespace jIAnSoft.Framework.Brook
                 {
                     Conn.Close();
                 }
+
                 Conn.Dispose();
                 Conn = null;
             }
+
             _disposed = true;
         }
 

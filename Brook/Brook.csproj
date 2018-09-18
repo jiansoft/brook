@@ -9,9 +9,9 @@
    <TargetFrameworks>net451;netstandard2.0</TargetFrameworks>
    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
    <RootNamespace>jIAnSoft.Framework.Brook</RootNamespace>
-   <AssemblyVersion>18.1.26</AssemblyVersion>
-   <FileVersion>18.1.26</FileVersion>
-   <Version>18.1.26</Version>
+   <AssemblyVersion>18.9.18.1754</AssemblyVersion>
+   <FileVersion>18.9.18.1754</FileVersion>
+   <Version>18.9.18.1754</Version>
    <PackageLicenseUrl>https://github.com/jiansoft/brook/blob/master/LICENSE</PackageLicenseUrl>
    <Copyright>Copyright © jIAnSoft 2017</Copyright>
    <PackageProjectUrl>https://github.com/jiansoft/brook</PackageProjectUrl>
@@ -25,7 +25,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net451|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
   <!--
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net451|AnyCPU'">
@@ -63,5 +63,5 @@
     </PackageReference>
     <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
     <PackageReference Include="System.Data.Common" Version="4.3.0" />
-  </ItemGroup>
+  </ItemGroup>  
 </Project>

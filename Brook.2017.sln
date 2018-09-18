@@ -5,9 +5,9 @@ VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brook", "Brook\Brook.csproj", "{43BEFBA4-FA3A-4D37-BFA4-D99133ABA027}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoNetFramework", "DemoNetFramework\DemoNetFramework.csproj", "{5CDF9BD0-8CB6-4A24-B837-57FAAC1E03BD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoNetFramework", "Demo\NetFramework\DemoNetFramework.csproj", "{5CDF9BD0-8CB6-4A24-B837-57FAAC1E03BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoNetCore", "DemoNetCore\DemoNetCore.csproj", "{55DAE515-ED1D-425F-9434-6FA5C7CB216A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoNetCore", "Demo\NetCore\DemoNetCore.csproj", "{55DAE515-ED1D-425F-9434-6FA5C7CB216A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
