@@ -1,4 +1,6 @@
-﻿namespace jIAnSoft.Brook.Configuration
+﻿using System.ComponentModel;
+
+namespace jIAnSoft.Brook.Configuration
 {
 #if NET451
     using System;
@@ -9,25 +11,41 @@
         /// 連線字串
         /// </summary>
         [ConfigurationProperty("connection")]
-        public string Connection => (string) base["connection"];
+        public string Connection
+        {
+            get { return (string)base["connection"]; }
+            set { base["connection"] = value; }
+        }
 
         /// <summary>
         /// 識別名稱
         /// </summary>
         [ConfigurationProperty("name", IsRequired = true)]
-        public string Name => (string) base["name"];
+        public string Name
+        {
+            get { return (string) base["name"]; }
+            set { base["name"] = value; }
+        }
 
         /// <summary>
         /// 取得 .NET Framework 資料提供者的名稱，關聯的 SqlDataSource 控制項會用來連接到基礎資料來源。
         /// </summary>
         [ConfigurationProperty("providerName", IsRequired = true)]
-        public string ProviderName => (string) base["providerName"];
+        public string ProviderName
+        {
+            get { return (string)base["providerName"]; }
+            set { base["providerName"] = value; }
+        }
 
         /// <summary>
         /// 資料庫連線逾時設定
         /// </summary>
-        [ConfigurationProperty("commandTimeOut", DefaultValue = "30")]
-        public int CommandTimeOut => Convert.ToInt32(base["commandTimeOut"]);
+        [ConfigurationProperty("commandTimeOut", DefaultValue = "15")]
+        public int CommandTimeOut
+        {
+            get { return Convert.ToInt32(base["commandTimeOut"]); }
+            set { base["commandTimeOut"] = value.ToString(); }
+        }
     }
 
 #elif NETSTANDARD2_0
@@ -36,6 +54,7 @@
         public string Connection { get; set; }
         public string Name { get; set; }
         public string ProviderName { get; set; }
+        [DefaultValue(15)]
         public int CommandTimeOut { get; set; }
     }
 #endif

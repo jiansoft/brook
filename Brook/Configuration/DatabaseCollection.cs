@@ -43,6 +43,10 @@ namespace jIAnSoft.Brook.Configuration
         {
             Database = dic;
         }
+        public bool ContainsKey(string key)
+        {
+            return Database.ContainsKey(key);
+        }
     }
 #endif
 }

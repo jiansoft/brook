@@ -7,7 +7,6 @@ using System.Configuration.Provider;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace jIAnSoft.Brook
 {
@@ -21,111 +20,79 @@ namespace jIAnSoft.Brook
         private DbProviderFactory _provider;
 
         /// <summary>
+        /// ConnectionStringSettings
+        /// </summary>
+        private readonly ConnectionStringSettings _connStringSetting;
+
+        /// <summary>
         /// 
         /// </summary>
-        protected ConnectionStringSettings ConnectionSetting;
+        internal readonly DatabaseConfiguration DbConfiguration;
 
         /// <summary>
         /// Connection resource
         /// </summary>
         private DbConnection Conn { get; set; }
 
+        /// <inheritdoc />
         /// <summary>
-        /// Db configuration
         /// </summary>
-        private DatabaseConfiguration DbConfiguration { get; set; }
-
-        public DbProvider(string argStrDbProviderName)
-        {
-            InitDbProvider(InitConnectionStringSetting(argStrDbProviderName));
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="argStrHost"></param>
-        /// <param name="argIntPort"></param>
-        /// <param name="argStrUser"></param>
-        /// <param name="argStrPassword"></param>
-        /// <param name="argStrDbName"></param>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        /// <param name="user"></param>
+        /// <param name="password"></param>
+        /// <param name="dbName"></param>
         /// <param name="providerName"></param>
-        public DbProvider(string argStrHost, int argIntPort, string argStrDbName, string argStrUser,
-            string argStrPassword, string providerName)
-            : this(new ConnectionStringSettings
+        public DbProvider(string host, int port, string dbName, string user, string password, string providerName)
+            : this(new DatabaseConfiguration
             {
-                ConnectionString =
-                    $"server={argStrHost},{argIntPort};database={argStrDbName};uid={argStrUser};pwd={argStrPassword};",
+                Connection = $"server={host},{port};database={dbName};uid={user};pwd={password};",
                 ProviderName = providerName,
-                Name = argStrDbName
+                Name = dbName
             })
         {
         }
 
-        internal DbProvider(ConnectionStringSettings argDbConfig)
-        {
-            InitDbProvider(argDbConfig);
-        }
-
+        /// <inheritdoc />
         /// <summary>
-        /// Initial ConnectionSetting 
         /// </summary>
-        protected ConnectionStringSettings InitConnectionStringSetting(string argStrDbProviderName)
-        {
-            DbConfiguration = Section.Get.Database.Which[argStrDbProviderName];
-            return new ConnectionStringSettings
+        /// <param name="dbConfig"></param>
+        public DbProvider(DatabaseConfiguration dbConfig) : this(
+            new ConnectionStringSettings
             {
-                ConnectionString = DbConfiguration.Connection,
-                ProviderName = DbConfiguration.ProviderName,
-                Name = DbConfiguration.Name
-            };
+                ConnectionString = dbConfig.Connection,
+                ProviderName = dbConfig.ProviderName,
+                Name = dbConfig.Name
+            })
+        {
+            DbConfiguration = dbConfig;
         }
 
-        /*
+        /// <inheritdoc />
         /// <summary>
-        /// Initial Db connect
         /// </summary>
-        /// <param name="argStrDbProviderName"></param>
-        private void InitDbProvider(string argStrDbProviderName)
+        /// <param name="connStringStringSettings"></param>
+        private DbProvider(ConnectionStringSettings connStringStringSettings)
         {
-            InitDbProvider(InitConnectionStringSetting(argStrDbProviderName));
-        }
-        */
-        /// <summary>
-        /// Initial Db connect
-        /// </summary>
-        /// <param name="argConfig"></param>
-        private void InitDbProvider(ConnectionStringSettings argConfig)
-        {
-            ConnectionSetting = argConfig;
+            _connStringSetting = connStringStringSettings;
+
 #if NET451
-            _provider = System.Data.Common.DbProviderFactories.GetFactory(ConnectionSetting.ProviderName);
+            _provider = System.Data.Common.DbProviderFactories.GetFactory(_connStringSetting.ProviderName);
 #elif NETSTANDARD2_0
 
-            _provider = DbProviderFactories.GetFactory(ConnectionSetting.ProviderName);
+            _provider = DbProviderFactories.GetFactory(_connStringSetting.ProviderName);
 #endif
-            //Timeout = DbConfiguration.CommandTimeOut;
         }
-        /*
-        /// <summary>
-        ///Get new SQL connection
-        /// </summary>
-        /// <param name="argStrDbProviderName"></param>
-        /// <returns></returns>
-        public DbConnection GetNewSqlConnection(string argStrDbProviderName)
-        {
-            InitDbProvider(argStrDbProviderName);
-            return GetConnection;
-        }*/
 
         /// <summary>
         /// 目前連線的資料庫位置
         /// </summary>
-        public string ConnectionSource => ConnectionSetting.ConnectionString;
+        public string ConnectionSource => _connStringSetting.ConnectionString;
 
         /// <summary>
         /// 取得資料庫連線
         /// </summary>
-        private DbConnection GetConnection
+        private DbConnection CreateConnection
         {
             get
             {
@@ -133,39 +100,43 @@ namespace jIAnSoft.Brook
                 if (con == null)
                     throw new SqlException(string.Format(
                         new CultureInfo(Section.Get.Common.Culture.Name),
-                        $"Cannot connect to specified sql server({ConnectionSetting.Name} => {ConnectionSetting.ConnectionString})."
+                        $"Cannot connect to specified sql server({_connStringSetting.Name} => {_connStringSetting.ConnectionString})."
                     ));
-                con.ConnectionString = ConnectionSetting.ConnectionString;
+                con.ConnectionString = _connStringSetting.ConnectionString;
                 con.Open();
                 return con;
             }
         }
 
+
+        /*
         /// <summary>
         /// Escapes a string for use in a fulltext query
         /// </summary>
-        /// <param name="argStrValue"></param>
+        /// <param name="sourceValue"></param>
         /// <returns></returns>
-        public string EscapeStringFulltext(string argStrValue)
+        public string EscapeStringFulltext(string sourceValue)
         {
-            if (argStrValue == null)
-                throw new ArgumentNullException(nameof(argStrValue));
+            if (sourceValue == null)
+                throw new ArgumentNullException(nameof(sourceValue));
             return
-                EscapeString(Regex.Replace(argStrValue, @"""*\(*\)*\!*\[*\]*\.*\{*\}*\~*\s*", "",
+                EscapeString(Regex.Replace(sourceValue, @"""*\(*\)*\!*\[*\]*\.*\{*\}*\~*\s*", "",
                     RegexOptions.IgnoreCase));
         }
+       
 
         /// <summary>
         /// Escapes a string for use in a query
         ///  <param name="argStrValue">SQL指令.</param>
         /// </summary>
-        public static string EscapeString(string argStrValue)
+        public static string EscapeString(string sourceValue)
         {
-            if (argStrValue == null)
-                throw new ArgumentNullException(nameof(argStrValue));
+            if (sourceValue == null)
+                throw new ArgumentNullException(nameof(sourceValue));
 
-            return argStrValue.Replace("'", "''");
+            return sourceValue.Replace("'", "''");
         }
+         */
 
         private static string PrintDbParameters(IReadOnlyCollection<DbParameter> parameters)
         {
@@ -192,9 +163,9 @@ namespace jIAnSoft.Brook
             Conn?.Close();
         }
 
-        private DbCommand GetCommand(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters)
+        private DbCommand CreateCommand(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters)
         {
-            Conn = GetConnection;
+            Conn = CreateConnection;
             var cmd = Conn.CreateCommand();
             cmd.CommandTimeout = timeout;
             cmd.CommandText = sqlCmd;
@@ -312,6 +283,25 @@ namespace jIAnSoft.Brook
             return re;
         }
 
+        internal DbParameter CreateParameter(string name, object value, DbType dbType, int size,
+            ParameterDirection direction)
+        {
+            var p = _provider.CreateParameter();
+            if (p == null)
+                throw new SqlException(string.Format(
+                    new CultureInfo(Section.Get.Common.Culture.Name),
+                    $"Cannot create a sql parameter ({_connStringSetting.Name}."
+                ));
+            p.ParameterName = name;
+            p.DbType = dbType;
+            p.Value = value;
+            p.Size = size;
+            p.Direction = direction;
+            p.SourceVersion = DataRowVersion.Current;
+            p.SourceColumn = string.Empty;
+            return p;
+        }
+
         /// <summary>
         /// Executes a SQL statement, and returns a value that from an operation such as a stored procedure, built-in function, or user-defined function.
         /// </summary>
@@ -324,14 +314,15 @@ namespace jIAnSoft.Brook
         {
             try
             {
-                var dbParameter = _provider.CreateParameter();
+                var dbParameter =
+                    CreateParameter("@ReturnValue", null, DbType.String, 0, ParameterDirection.ReturnValue);
                 if (dbParameter == null) return default(T);
-                dbParameter.ParameterName = "@ReturnValue";
-                dbParameter.DbType = DbType.String;
-                dbParameter.Direction = ParameterDirection.ReturnValue;
+                //dbParameter.ParameterName = "@ReturnValue";
+                //dbParameter.DbType = DbType.String;
+                //dbParameter.Direction = ParameterDirection.ReturnValue;
                 dbParameter.IsNullable = true;
-                dbParameter.SourceColumn = string.Empty;
-                dbParameter.SourceVersion = DataRowVersion.Default;
+                // dbParameter.SourceColumn = string.Empty;
+                // dbParameter.SourceVersion = DataRowVersion.Default;
                 var dbParameters = new List<DbParameter> {dbParameter};
                 if (parameters != null)
                 {
@@ -368,7 +359,7 @@ namespace jIAnSoft.Brook
         {
             try
             {
-                var cmd = GetCommand(timeout, commandType, sqlCmd, parameters);
+                var cmd = CreateCommand(timeout, commandType, sqlCmd, parameters);
                 return cmd.ExecuteNonQuery();
             }
             catch (Exception sqlEx)
@@ -394,7 +385,7 @@ namespace jIAnSoft.Brook
         {
             try
             {
-                var cmd = GetCommand(timeout, commandType, sqlCmd, parameters);
+                var cmd = CreateCommand(timeout, commandType, sqlCmd, parameters);
                 return cmd.ExecuteReader();
             }
             catch (Exception sqlEx)
@@ -415,7 +406,7 @@ namespace jIAnSoft.Brook
         {
             try
             {
-                var cmd = GetCommand(timeout, commandType, sqlCmd, parameters);
+                var cmd = CreateCommand(timeout, commandType, sqlCmd, parameters);
                 var result = cmd.ExecuteScalar();
                 if (null == result)
                 {
@@ -456,7 +447,7 @@ namespace jIAnSoft.Brook
 
                     using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
                     {
-                        adapter.SelectCommand = GetCommand(timeout, commandType, sqlCmd, parameters);
+                        adapter.SelectCommand = CreateCommand(timeout, commandType, sqlCmd, parameters);
                         adapter.Fill(ds);
                         return ds;
                     }
@@ -501,7 +492,7 @@ namespace jIAnSoft.Brook
                             new CultureInfo(Section.Get.Common.Culture.Name),
                             "{0} Source = {1}\n Table = {2}\n",
                             sqlEx.Message,
-                            ConnectionSetting.Name,
+                            ConnStringSetting.Name,
                             table.TableName
                         ),
                         sqlEx);
@@ -513,7 +504,7 @@ namespace jIAnSoft.Brook
             IReadOnlyCollection<DbParameter> parameters = null)
         {
             var errStr =
-                $"{sqlEx.Message}\nSource = {ConnectionSetting.Name}\nCmd = {sqlCmd}\nParam = {PrintDbParameters(parameters)}";
+                $"{sqlEx.Message}\nSource = {_connStringSetting.Name}\nCmd = {sqlCmd}\nParam = {PrintDbParameters(parameters)}";
             return new SqlException(errStr, sqlEx);
         }
 
@@ -531,7 +522,7 @@ namespace jIAnSoft.Brook
                 Conn.Dispose();
                 Conn = null;
             }
-
+            _provider = null;
             _disposed = true;
         }
 

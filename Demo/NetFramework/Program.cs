@@ -1,10 +1,12 @@
 ﻿using jIAnSoft.Brook.Mapper;
+using Npgsql;
+using NpgsqlTypes;
 using System;
 using System.Data;
 using System.Data.Common;
+using System.Runtime.InteropServices;
+using jIAnSoft.Brook.Configuration;
 using MySql.Data.MySqlClient;
-using Npgsql;
-using NpgsqlTypes;
 
 namespace DemoNetFramework
 {
@@ -23,7 +25,18 @@ namespace DemoNetFramework
                 });
             foreach (DataRow row in t.Rows)
             {
-                Console.WriteLine($"    {row[0]} {row[1]} {row[2]}");
+                Console.WriteLine($"t    {row[0]} {row[1]} {row[2]}");
+            }
+
+            var db = Brook.Load("postgresql");
+            var ds = db.DataSet("SELECT id ,name ,email FROM public.account where name = @name;",
+                new[]
+                {
+                    db.Parameter("@name", "許功蓋", DbType.String)
+                });
+            foreach (var row in ds.Tables[0].AsEnumerable())
+            {
+                Console.WriteLine($"ds    {row[0]} {row[1]} {row[2]}");
             }
         }
 
@@ -40,6 +53,16 @@ namespace DemoNetFramework
         private static void MySql()
         {
             Console.WriteLine("From MySQL");
+
+            var db = Brook.Load("mysql");
+            var t = db.Table(
+                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = @name;",
+                new[] {db.Parameter("@name", "Ben Nuttall", DbType.String)});
+            foreach (DataRow row in t.Rows)
+            {
+                Console.WriteLine($"t    {row[0]} {row[1]} {row[2]}");
+            }
+
             var ds = Brook.Load("mysql").DataSet(
                 "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = @name;",
                 new DbParameter[]
@@ -47,11 +70,11 @@ namespace DemoNetFramework
                     new MySqlParameter("@name", MySqlDbType.VarChar)
                     {
                         Value = "Ben Nuttall"
-                    },
+                    }
                 });
-            foreach (DataRow row in ds.Tables[0].Rows)
+            foreach (var row in ds.Tables[0].AsEnumerable())
             {
-                Console.WriteLine($"    {row[0]} {row[1]} {row[2]}");
+                Console.WriteLine($"ds    {row[0]} {row[1]} {row[2]}");
             }
         }
 

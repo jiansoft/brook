@@ -1,13 +1,14 @@
 ﻿using jIAnSoft.Brook.Mapper;
+using MySql.Data.MySqlClient;
+using Npgsql;
+using NpgsqlTypes;
 using System;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.IO;
-using MySql.Data.MySqlClient;
-using Npgsql;
-using NpgsqlTypes;
+using jIAnSoft.Brook.Configuration;
 
 namespace DemoNetCore
 {
@@ -51,33 +52,34 @@ namespace DemoNetCore
                         if (!transTimeStart.IsFixedDateRule)
                         {
                             sw.WriteLine("      Begins at {0:t} on {1} of week {2} of {3}", transTimeStart.TimeOfDay,
-                                                                                          transTimeStart.DayOfWeek,
-                                                                                          transTimeStart.Week,
-                                                                                          dateFormats.MonthNames[transTimeStart.Month - 1]);
+                                transTimeStart.DayOfWeek,
+                                transTimeStart.Week,
+                                dateFormats.MonthNames[transTimeStart.Month - 1]);
                             sw.WriteLine("      Ends at {0:t} on {1} of week {2} of {3}", transTimeEnd.TimeOfDay,
-                                                                                          transTimeEnd.DayOfWeek,
-                                                                                          transTimeEnd.Week,
-                                                                                          dateFormats.MonthNames[transTimeEnd.Month - 1]);
+                                transTimeEnd.DayOfWeek,
+                                transTimeEnd.Week,
+                                dateFormats.MonthNames[transTimeEnd.Month - 1]);
                         }
                         else
                         {
                             sw.WriteLine("      Begins at {0:t} on {1} {2}", transTimeStart.TimeOfDay,
-                                                                           transTimeStart.Day,
-                                                                           dateFormats.MonthNames[transTimeStart.Month - 1]);
+                                transTimeStart.Day,
+                                dateFormats.MonthNames[transTimeStart.Month - 1]);
                             sw.WriteLine("      Ends at {0:t} on {1} {2}", transTimeEnd.TimeOfDay,
-                                                                         transTimeEnd.Day,
-                                                                         dateFormats.MonthNames[transTimeEnd.Month - 1]);
+                                transTimeEnd.Day,
+                                dateFormats.MonthNames[transTimeEnd.Month - 1]);
                         }
                     }
                 }
             }
+
             sw.Close();
         }
 
         private static void PostgreSql()
         {
             Console.WriteLine("From PostgreSQL");
-            var t = Brook.Load("postgresql").Table("SELECT id ,name ,email FROM public.account where \"name\" = @name;",
+            var t = Brook.Load("postgresql").Table("SELECT id ,name ,email FROM public.account where name = @name;",
                 new DbParameter[]
                 {
                     new NpgsqlParameter("@name", NpgsqlDbType.Varchar)
@@ -87,9 +89,21 @@ namespace DemoNetCore
                 });
             foreach (DataRow row in t.Rows)
             {
-                Console.WriteLine($"    {row[0]} {row[1]} {row[2]}");
+                Console.WriteLine($"t    {row[0]} {row[1]} {row[2]}");
+            }
+
+            var db = Brook.Load("postgresql");
+            var ds = db.DataSet("SELECT id ,name ,email FROM public.account where name = @name;",
+                new[]
+                {
+                    db.Parameter("@name", "許功蓋", DbType.String)
+                });
+            foreach (var row in ds.Tables[0].AsEnumerable())
+            {
+                Console.WriteLine($"ds    {row[0]} {row[1]} {row[2]}");
             }
         }
+
 
         private static void MsSql()
         {
@@ -104,6 +118,16 @@ namespace DemoNetCore
         private static void MySql()
         {
             Console.WriteLine("From MySQL");
+
+            var db = Brook.Load("mysql");
+            var t = db.Table(
+                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = @name;",
+                new[] {db.Parameter("@name", "Ben Nuttall", DbType.String)});
+            foreach (DataRow row in t.Rows)
+            {
+                Console.WriteLine($"t    {row[0]} {row[1]} {row[2]}");
+            }
+
             var ds = Brook.Load("mysql").DataSet(
                 "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = @name;",
                 new DbParameter[]
@@ -111,11 +135,11 @@ namespace DemoNetCore
                     new MySqlParameter("@name", MySqlDbType.VarChar)
                     {
                         Value = "Ben Nuttall"
-                    },
+                    }
                 });
-            foreach (DataRow row in ds.Tables[0].Rows)
+            foreach (var row in ds.Tables[0].AsEnumerable())
             {
-                Console.WriteLine($"    {row[0]} {row[1]} {row[2]}");
+                Console.WriteLine($"ds    {row[0]} {row[1]} {row[2]}");
             }
         }
 
@@ -131,6 +155,7 @@ namespace DemoNetCore
             {
                 Console.WriteLine(ex.Message);
             }
+
             Console.ReadKey();
         }
     }

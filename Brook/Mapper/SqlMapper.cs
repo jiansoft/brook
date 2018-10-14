@@ -1,19 +1,42 @@
-﻿using jIAnSoft.Brook.Configuration;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using jIAnSoft.Brook.Configuration;
 
 namespace jIAnSoft.Brook.Mapper
 {
     public class SqlMapper
     {
-        private readonly string _db;
+        private readonly DbProvider _db;
 
-        public SqlMapper(string db)
+        internal SqlMapper(string dbName)
         {
-            _db = db;
+            var dbConfig = Section.Get.Database.Which.ContainsKey(dbName)
+                ? Section.Get.Database.Which[dbName]
+                : new DatabaseConfiguration {Name = dbName};
+            _db = new DbProvider(dbConfig);
         }
 
+        public DbParameter Parameter(string name, DbType dbType, ParameterDirection direction, int size = 0)
+        {
+            return Parameter(name, null, dbType, size, direction);
+        }
+
+        public DbParameter Parameter(string name, object value, DbType dbType, int size = 0)
+        {
+            return Parameter(name, value, dbType, size, ParameterDirection.Input);
+        }
+
+        public DbParameter Parameter(string name, object value, DbType dbType, ParameterDirection direction)
+        {
+            return Parameter(name, value, dbType, 0, direction);
+        }
+
+        public DbParameter Parameter(string name, object value, DbType dbType, int size, ParameterDirection direction)
+        {
+            var p = _db.CreateParameter(name, value, dbType, size, direction);
+            return p;
+        }
 
         /// <summary>
         ///  Execute SQL and return first row data that type is <see cref="T"/>.
@@ -35,7 +58,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public T First<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            return First<T>(Section.Get.Database.Which[_db].CommandTimeOut, commandType, sqlCmd, parameters);
+            return First<T>(_db.DbConfiguration.CommandTimeOut, commandType, sqlCmd, parameters);
         }
 
         /// <summary>
@@ -48,10 +71,10 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public T First<T>(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db))
-            {
-                return db.First<T>(timeout, commandType, sqlCmd, parameters);
-            }
+//            using (var db = new DbProvider(_db.ConnStringSetting.Name))
+//            {
+            return _db.First<T>(timeout, commandType, sqlCmd, parameters);
+//            }
         }
 
         /// <summary>
@@ -74,7 +97,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public DataTable Table(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            return Table(Section.Get.Database.Which[_db].CommandTimeOut, commandType, sqlCmd, parameters);
+            return Table(_db.DbConfiguration.CommandTimeOut, commandType, sqlCmd, parameters);
         }
 
         /// <summary>
@@ -100,17 +123,17 @@ namespace jIAnSoft.Brook.Mapper
 
         public DataSet DataSet(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            return DataSet(Section.Get.Database.Which[_db].CommandTimeOut, commandType, sqlCmd, parameters);
+            return DataSet(_db.DbConfiguration.CommandTimeOut, commandType, sqlCmd, parameters);
         }
 
         public DataSet DataSet(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db))
-            {
-                return db.DataSet(timeout, commandType, sqlCmd, parameters);
-            }
+            //using (var db = new DbProvider(_db.ConnStringSetting.Name))
+            //{
+            return _db.DataSet(timeout, commandType, sqlCmd, parameters);
+            //}
         }
-        
+
         /// <summary>
         ///  Execute SQL and return a <see cref="T"/> array.
         /// </summary>
@@ -131,7 +154,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public List<T> Query<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            return Query<T>(Section.Get.Database.Which[_db].CommandTimeOut, commandType, sqlCmd, parameters);
+            return Query<T>(_db.DbConfiguration.CommandTimeOut, commandType, sqlCmd, parameters);
         }
 
         /// <summary>
@@ -144,10 +167,10 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public List<T> Query<T>(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db))
-            {
-                return db.Query<T>(timeout, commandType, sqlCmd, parameters);
-            }
+//            using (var db = new DbProvider(_db.ConnStringSetting.Name))
+//            {
+            return _db.Query<T>(timeout, commandType, sqlCmd, parameters);
+//            }
         }
 
 
@@ -167,11 +190,11 @@ namespace jIAnSoft.Brook.Mapper
         /// </summary>
         /// <param name="sqlCmd">SQL command</param>
         /// <param name="parameters">SQL parameters</param>
-        /// <param name="argEmuCommandType">SQL command type SP、Text</param>
+        /// <param name="commandType">SQL command type SP、Text</param>
         /// <returns></returns>
-        public T Value<T>(CommandType argEmuCommandType, string sqlCmd, DbParameter[] parameters = null)
+        public T Value<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            return Value<T>(Section.Get.Database.Which[_db].CommandTimeOut, argEmuCommandType, sqlCmd, parameters);
+            return Value<T>(_db.DbConfiguration.CommandTimeOut, commandType, sqlCmd, parameters);
         }
 
         /// <summary>
@@ -184,10 +207,10 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public T Value<T>(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db))
-            {
-                return db.Value<T>(timeout, commandType, sqlCmd, parameters);
-            }
+//            using (var db = new DbProvider(_db.ConnStringSetting.Name))
+//            {
+            return _db.Value<T>(timeout, commandType, sqlCmd, parameters);
+//            }
         }
 
 
@@ -211,7 +234,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public int Execute(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            return Execute(Section.Get.Database.Which[_db].CommandTimeOut, commandType, sqlCmd, parameters);
+            return Execute(_db.DbConfiguration.CommandTimeOut, commandType, sqlCmd, parameters);
         }
 
         /// <summary>
@@ -224,10 +247,10 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public int Execute(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db))
-            {
-                return db.Execute(timeout, commandType, sqlCmd, parameters);
-            }
+//            using (var db = new DbProvider(_db.ConnStringSetting.Name))
+//            {
+            return _db.Execute(timeout, commandType, sqlCmd, parameters);
+//            }
         }
 
 
@@ -251,7 +274,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public T One<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            return One<T>(Section.Get.Database.Which[_db].CommandTimeOut, commandType, sqlCmd, parameters);
+            return One<T>(_db.DbConfiguration.CommandTimeOut, commandType, sqlCmd, parameters);
         }
 
         /// <summary>
@@ -264,10 +287,10 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public T One<T>(int timeout, CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db))
-            {
-                return db.One<T>(timeout, commandType, sqlCmd, parameters);
-            }
+//            using (var db = new DbProvider(_db.ConnStringSetting.Name))
+//            {
+            return _db.One<T>(timeout, commandType, sqlCmd, parameters);
+//            }
         }
     }
 }
