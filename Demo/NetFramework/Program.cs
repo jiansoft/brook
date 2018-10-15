@@ -1,4 +1,5 @@
 ﻿using jIAnSoft.Brook.Mapper;
+using jIAnSoft.Nami.Clockwork;
 using MySql.Data.MySqlClient;
 using Npgsql;
 using NpgsqlTypes;
@@ -12,7 +13,7 @@ namespace DemoNetFramework
     {
         private static void PostgreSql()
         {
-            Console.WriteLine("From PostgreSQL");
+            Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} From PostgreSQL");
             var t = Brook.Load("postgresql").Table("SELECT id ,name ,email FROM public.account where name = @name;",
                 new DbParameter[]
                 {
@@ -40,7 +41,7 @@ namespace DemoNetFramework
 
         private static void MsSql()
         {
-            Console.WriteLine("From MsSQL");
+            Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} From MsSQL");
             var t = Brook.Load("mssql").Query<Account>("SELECT [Id],[Name] ,[Email] FROM account;");
             foreach (var row in t)
             {
@@ -50,7 +51,7 @@ namespace DemoNetFramework
 
         private static void MySql()
         {
-            Console.WriteLine("From MySQL");
+            Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} From MySQL");
 
             var db = Brook.Load("mysql");
             var t = db.Table(
@@ -78,14 +79,14 @@ namespace DemoNetFramework
             var account = db.First<Account>(
                 "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` WHERE `id` = ?id;",
                 new[] {db.Parameter("?id", 1, DbType.Int32)});
-            Console.WriteLine($"account   Id:{account.Id} Email:{account.Email} Name:{account.Name}");
+            Console.WriteLine($"First   Id:{account.Id} Email:{account.Email} Name:{account.Name}");
 
             var accounts =
                 db.Query<Account>(
                     "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` order by `id` desc;;");
             foreach (var a in accounts)
             {
-                Console.WriteLine($"account   Id:{a.Id} Email:{a.Email} Name:{a.Name}");
+                Console.WriteLine($"Query   Id:{a.Id} Email:{a.Email} Name:{a.Name}");
             }
 
             var one = db.One<int>(CommandType.StoredProcedure, "test.ReturnValue", new[] { db.Parameter("@param1", 12, DbType.Int32) });
@@ -94,16 +95,18 @@ namespace DemoNetFramework
 
         private static void Main(string[] args)
         {
-            try
-            {
-                //MsSql();
-                //PostgreSql();
-                MySql();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
+            Nami.Every(1).Seconds().Do(() => {
+                try
+                {
+                    MsSql();
+                    PostgreSql();
+                    MySql();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            });
 
             Console.ReadKey();
         }

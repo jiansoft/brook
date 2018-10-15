@@ -171,7 +171,7 @@ namespace jIAnSoft.Brook
             var instance = default(T);
             using (var reader = Reader(commandType, sqlCmd, parameters))
             {
-                if (reader.Read())
+                if (reader.HasRows && reader.Read())
                 {
                     instance = Activator.CreateInstance<T>();
                     for (var i = reader.FieldCount - 1; i >= 0; i--)
@@ -290,11 +290,9 @@ namespace jIAnSoft.Brook
         {
             try
             {
-                using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
-                {
-                    var r = cmd.ExecuteReader();
-                    return r;
-                }
+                var cmd = CreateCommand(commandType, sqlCmd, parameters);
+                var r = cmd.ExecuteReader();
+                return r;
             }
             catch (Exception sqlEx)
             {

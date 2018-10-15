@@ -8,7 +8,7 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.IO;
-using jIAnSoft.Brook.Configuration;
+using jIAnSoft.Nami.Clockwork;
 
 namespace DemoNetCore
 {
@@ -78,7 +78,7 @@ namespace DemoNetCore
 
         private static void PostgreSql()
         {
-            Console.WriteLine("From PostgreSQL");
+            Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} From PostgreSQL");
             var t = Brook.Load("postgresql").Table("SELECT id ,name ,email FROM public.account where name = @name;",
                 new DbParameter[]
                 {
@@ -107,7 +107,7 @@ namespace DemoNetCore
 
         private static void MsSql()
         {
-            Console.WriteLine("From MsSQL");
+            Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} From MsSQL");
             var t = Brook.Load("mssql").Query<Account>("SELECT [Id],[Name] ,[Email] FROM account;");
             foreach (var row in t)
             {
@@ -117,22 +117,22 @@ namespace DemoNetCore
 
         private static void MySql()
         {
-            Console.WriteLine("From MySQL");
+            Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} From MySQL");
 
             var db = Brook.Load("mysql");
             var t = db.Table(
-                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = @name;",
-                new[] {db.Parameter("@name", "Ben Nuttall", DbType.String)});
+                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = ?name;",
+                new[] { db.Parameter("?name", "Ben Nuttall", DbType.String) });
             foreach (DataRow row in t.Rows)
             {
                 Console.WriteLine($"t    {row[0]} {row[1]} {row[2]}");
             }
 
             var ds = Brook.Load("mysql").DataSet(
-                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = @name;",
+                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = ?name;",
                 new DbParameter[]
                 {
-                    new MySqlParameter("@name", MySqlDbType.VarChar)
+                    new MySqlParameter("?name", MySqlDbType.VarChar)
                     {
                         Value = "Ben Nuttall"
                     }
@@ -141,21 +141,39 @@ namespace DemoNetCore
             {
                 Console.WriteLine($"ds    {row[0]} {row[1]} {row[2]}");
             }
+
+            var account = db.First<Account>(
+                "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` WHERE `id` = ?id;",
+                new[] { db.Parameter("?id", 1, DbType.Int32) });
+            Console.WriteLine($"First Id:{account.Id} Email:{account.Email} Name:{account.Name}");
+
+            var accounts =
+                db.Query<Account>(
+                    "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` order by `id` desc;;");
+            foreach (var a in accounts)
+            {
+                Console.WriteLine($"Query   Id:{a.Id} Email:{a.Email} Name:{a.Name}");
+            }
+
+            var one = db.One<int>(CommandType.StoredProcedure, "test.ReturnValue", new[] { db.Parameter("@param1", 12, DbType.Int32) });
+            Console.WriteLine($"one is {one}");
         }
 
         private static void Main(string[] args)
         {
-            try
-            {
-                MsSql();
-                PostgreSql();
-                MySql();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-
+            Nami.Every(1).Seconds().Do(() => {
+                try
+                {
+                    MsSql();
+                    PostgreSql();
+                    MySql();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }               
+            });
+           
             Console.ReadKey();
         }
     }

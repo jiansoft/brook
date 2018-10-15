@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="jIAnSoft.Nami" Version="18.9.20.1613" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.1.1" />
