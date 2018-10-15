@@ -54,18 +54,18 @@ namespace DemoNetFramework
 
             var db = Brook.Load("mysql");
             var t = db.Table(
-                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = @name;",
-                new[] {db.Parameter("@name", "Ben Nuttall", DbType.String)});
+                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = ?name;",
+                new[] {db.Parameter("?name", "Ben Nuttall", DbType.String)});
             foreach (DataRow row in t.Rows)
             {
                 Console.WriteLine($"t    {row[0]} {row[1]} {row[2]}");
             }
 
             var ds = Brook.Load("mysql").DataSet(
-                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = @name;",
+                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = ?name;",
                 new DbParameter[]
                 {
-                    new MySqlParameter("@name", MySqlDbType.VarChar)
+                    new MySqlParameter("?name", MySqlDbType.VarChar)
                     {
                         Value = "Ben Nuttall"
                     }
@@ -76,8 +76,8 @@ namespace DemoNetFramework
             }
 
             var account = db.First<Account>(
-                "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` WHERE `id` = @id;",
-                new[] {db.Parameter("@id", 1, DbType.Int32)});
+                "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` WHERE `id` = ?id;",
+                new[] {db.Parameter("?id", 1, DbType.Int32)});
             Console.WriteLine($"account   Id:{account.Id} Email:{account.Email} Name:{account.Name}");
 
             var accounts =

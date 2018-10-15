@@ -6,7 +6,7 @@ using System.Configuration;
 using System.Configuration.Provider;
 using System.Data;
 using System.Data.Common;
-using System.Globalization;
+using System.Reflection;
 
 namespace jIAnSoft.Brook
 {
@@ -345,21 +345,29 @@ namespace jIAnSoft.Brook
         {
             try
             {
-                using (var adapter = _provider.CreateDataAdapter())
+                var adapter = _provider.CreateDataAdapter();
+
+                if (adapter == null)
                 {
+                    if ("MySql.Data.MySqlClient" == _dbConfiguration.ProviderName)
+                    {
+                        adapter = Assembly.Load("MySql.Data")
+                            .CreateInstance("MySql.Data.MySqlClient.MySqlDataAdapter") as DbDataAdapter;
+                    }
+
                     if (adapter == null)
                     {
                         throw new SqlException(
                             "DbProviderFactory can't create a new instance of the provider's DataAdapter class.");
                     }
+                }
 
-                    using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
-                    {
-                        adapter.SelectCommand = CreateCommand(commandType, sqlCmd, parameters);
-                        adapter.Fill(ds);
-                        adapter.Dispose();
-                        return ds;
-                    }
+                using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
+                {
+                    adapter.SelectCommand = CreateCommand(commandType, sqlCmd, parameters);
+                    adapter.Fill(ds);
+                    adapter.Dispose();
+                    return ds;
                 }
             }
             catch (Exception sqlEx)
