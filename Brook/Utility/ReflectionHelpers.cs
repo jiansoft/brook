@@ -106,8 +106,8 @@ namespace jIAnSoft.Brook.Utility
                 field.SetValue(obj,
                     value == DBNull.Value
                         ? null
-                        : value is T
-                            ? (T)value
+                        : value is T variable1
+                            ? variable1
                             : value);
                 return;
             }
@@ -116,11 +116,11 @@ namespace jIAnSoft.Brook.Utility
                 BindingFlags.GetProperty | BindingFlags.NonPublic | BindingFlags.Public |
                 BindingFlags.Instance | BindingFlags.Static);
            if (null == property) return;
-            property?.SetValue(obj,
+            property.SetValue(obj,
                     value == DBNull.Value
                         ? null
-                        : value is T
-                            ? (T) value
+                        : value is T variable
+                            ? variable
                             : value);
         }
 

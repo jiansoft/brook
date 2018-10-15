@@ -1,12 +1,10 @@
 ﻿using jIAnSoft.Brook.Mapper;
+using MySql.Data.MySqlClient;
 using Npgsql;
 using NpgsqlTypes;
 using System;
 using System.Data;
 using System.Data.Common;
-using System.Runtime.InteropServices;
-using jIAnSoft.Brook.Configuration;
-using MySql.Data.MySqlClient;
 
 namespace DemoNetFramework
 {
@@ -76,14 +74,30 @@ namespace DemoNetFramework
             {
                 Console.WriteLine($"ds    {row[0]} {row[1]} {row[2]}");
             }
+
+            var account = db.First<Account>(
+                "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` WHERE `id` = @id;",
+                new[] {db.Parameter("@id", 1, DbType.Int32)});
+            Console.WriteLine($"account   Id:{account.Id} Email:{account.Email} Name:{account.Name}");
+
+            var accounts =
+                db.Query<Account>(
+                    "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` order by `id` desc;;");
+            foreach (var a in accounts)
+            {
+                Console.WriteLine($"account   Id:{a.Id} Email:{a.Email} Name:{a.Name}");
+            }
+
+            var one = db.One<int>(CommandType.StoredProcedure, "test.ReturnValue", new[] { db.Parameter("@param1", 12, DbType.Int32) });
+            Console.WriteLine($"one is {one}");
         }
 
         private static void Main(string[] args)
         {
             try
             {
-                MsSql();
-                PostgreSql();
+                //MsSql();
+                //PostgreSql();
                 MySql();
             }
             catch (Exception ex)

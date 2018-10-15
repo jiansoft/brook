@@ -8,3 +8,9 @@ create table account
 );
 insert into account (name,email)values('Ben Nuttall', 'Nuttall@mysql.com');
 insert into account (name,email)values('許功蓋', 'RedHat@mysql.com');
+
+
+CREATE PROCEDURE test.ReturnValue(param1 INT)
+BEGIN
+  SELECT param1;
+END
