@@ -92,15 +92,17 @@ namespace DemoNetCore
                 Console.WriteLine($"t    {row[0]} {row[1]} {row[2]}");
             }
 
-            var db = Brook.Load("postgresql");
-            var ds = db.DataSet("SELECT id ,name ,email FROM public.account where name = @name;",
-                new[]
-                {
-                    db.Parameter("@name", "許功蓋", DbType.String)
-                });
-            foreach (var row in ds.Tables[0].AsEnumerable())
+            using (var db = Brook.Load("postgresql"))
             {
-                Console.WriteLine($"ds    {row[0]} {row[1]} {row[2]}");
+                var ds = db.DataSet("SELECT id ,name ,email FROM public.account where name = @name;",
+                    new[]
+                    {
+                        db.Parameter("@name", "許功蓋", DbType.String)
+                    });
+                foreach (var row in ds.Tables[0].AsEnumerable())
+                {
+                    Console.WriteLine($"ds    {row[0]} {row[1]} {row[2]}");
+                }
             }
         }
 
@@ -119,44 +121,47 @@ namespace DemoNetCore
         {
             Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} From MySQL");
 
-            var db = Brook.Load("mysql");
-            var t = db.Table(
-                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = ?name;",
-                new[] { db.Parameter("?name", "Ben Nuttall", DbType.String) });
-            foreach (DataRow row in t.Rows)
+            using (var db = Brook.Load("mysql"))
             {
-                Console.WriteLine($"t    {row[0]} {row[1]} {row[2]}");
-            }
-
-            var ds = Brook.Load("mysql").DataSet(
-                "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = ?name;",
-                new DbParameter[]
+                var t = db.Table(
+                    "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = ?name;",
+                    new[] {db.Parameter("?name", "Ben Nuttall", DbType.String)});
+                foreach (DataRow row in t.Rows)
                 {
-                    new MySqlParameter("?name", MySqlDbType.VarChar)
+                    Console.WriteLine($"t    {row[0]} {row[1]} {row[2]}");
+                }
+
+                var ds = Brook.Load("mysql").DataSet(
+                    "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = ?name;",
+                    new DbParameter[]
                     {
-                        Value = "Ben Nuttall"
-                    }
-                });
-            foreach (var row in ds.Tables[0].AsEnumerable())
-            {
-                Console.WriteLine($"ds    {row[0]} {row[1]} {row[2]}");
+                        new MySqlParameter("?name", MySqlDbType.VarChar)
+                        {
+                            Value = "Ben Nuttall"
+                        }
+                    });
+                foreach (var row in ds.Tables[0].AsEnumerable())
+                {
+                    Console.WriteLine($"ds    {row[0]} {row[1]} {row[2]}");
+                }
+
+                var account = db.First<Account>(
+                    "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` WHERE `id` = ?id;",
+                    new[] {db.Parameter("?id", 1, DbType.Int32)});
+                Console.WriteLine($"First Id:{account.Id} Email:{account.Email} Name:{account.Name}");
+
+                var accounts =
+                    db.Query<Account>(
+                        "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` order by `id` desc;;");
+                foreach (var a in accounts)
+                {
+                    Console.WriteLine($"Query   Id:{a.Id} Email:{a.Email} Name:{a.Name}");
+                }
+
+                var one = db.One<int>(CommandType.StoredProcedure, "test.ReturnValue",
+                    new[] {db.Parameter("@param1", 12, DbType.Int32)});
+                Console.WriteLine($"one is {one}");
             }
-
-            var account = db.First<Account>(
-                "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` WHERE `id` = ?id;",
-                new[] { db.Parameter("?id", 1, DbType.Int32) });
-            Console.WriteLine($"First Id:{account.Id} Email:{account.Email} Name:{account.Name}");
-
-            var accounts =
-                db.Query<Account>(
-                    "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` order by `id` desc;;");
-            foreach (var a in accounts)
-            {
-                Console.WriteLine($"Query   Id:{a.Id} Email:{a.Email} Name:{a.Name}");
-            }
-
-            var one = db.One<int>(CommandType.StoredProcedure, "test.ReturnValue", new[] { db.Parameter("@param1", 12, DbType.Int32) });
-            Console.WriteLine($"one is {one}");
         }
 
         private static void Main(string[] args)

@@ -1,13 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using jIAnSoft.Brook.Configuration;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using jIAnSoft.Brook.Configuration;
 
 namespace jIAnSoft.Brook.Mapper
 {
-    public class SqlMapper
+    public class SqlMapper : IDisposable
     {
-        private readonly DbProvider _db;
+        private bool _disposed;
+
+        private DbProvider _db;
 
         internal SqlMapper(string dbName)
         {
@@ -213,6 +216,24 @@ namespace jIAnSoft.Brook.Mapper
 //            {
             return _db.One<T>(commandType, sqlCmd, parameters);
 //            }
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (!disposing || _disposed) return;
+
+            if (null != _db)
+            {
+                _db.Dispose();
+                _db = null;
+            }
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
         }
     }
 }
