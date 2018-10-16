@@ -40,7 +40,7 @@ namespace jIAnSoft.Brook.Configuration
         /// <summary>
         /// 資料庫連線逾時設定
         /// </summary>
-        [ConfigurationProperty("commandTimeOut", DefaultValue = "15")]
+        [ConfigurationProperty("commandTimeOut", DefaultValue = "5")]
         public int CommandTimeOut
         {
             get { return Convert.ToInt32(base["commandTimeOut"]); }
@@ -54,7 +54,7 @@ namespace jIAnSoft.Brook.Configuration
         public string Connection { get; set; }
         public string Name { get; set; }
         public string ProviderName { get; set; }
-        [DefaultValue(15)]
+        [DefaultValue(5)]
         public int CommandTimeOut { get; set; }
     }
 #endif

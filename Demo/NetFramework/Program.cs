@@ -98,19 +98,20 @@ namespace DemoNetFramework
 
         private static void Main(string[] args)
         {
+           
             Nami.Every(1).Seconds().Do(() => {
                 try
                 {
-                    MsSql();
-                    PostgreSql();
-                    MySql();
+                   MsSql();
+                   PostgreSql();
+                   MySql();
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
                 }
             });
-
+          
             Console.ReadKey();
         }
     }

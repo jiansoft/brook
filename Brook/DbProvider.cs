@@ -6,6 +6,7 @@ using System.Configuration;
 using System.Configuration.Provider;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Reflection;
 
 namespace jIAnSoft.Brook
@@ -27,7 +28,7 @@ namespace jIAnSoft.Brook
         /// <summary>
         /// DatabaseConfiguration
         /// </summary>
-        private DatabaseConfiguration _dbConfiguration;
+        private DatabaseConfiguration _dbConfig;
 
         /// <summary>
         /// Connection resource
@@ -70,7 +71,7 @@ namespace jIAnSoft.Brook
                 Name = dbConfig.Name
             })
         {
-            _dbConfiguration = dbConfig;
+            _dbConfig = dbConfig;
         }
 
         /// <inheritdoc />
@@ -88,27 +89,12 @@ namespace jIAnSoft.Brook
             _provider = DbProviderFactories.GetFactory(_connStringSetting.ProviderName);
 #endif
         }
-
-        /// <summary>
-        /// 取得資料庫連線
-        /// </summary>
-        private DbConnection CreateConnection()
-        {
-            var con = _provider.CreateConnection();
-            if (con == null)
-                throw new SqlException(
-                    $"Cannot connect to specified sql server({_connStringSetting.Name} => {_connStringSetting.ConnectionString}).");
-            con.ConnectionString = _connStringSetting.ConnectionString;
-            //con.Open();
-            return con;
-        }
-
+        
         private static string PrintDbParameters(IReadOnlyCollection<DbParameter> parameters)
         {
             if (null == parameters) return string.Empty;
             var t = new string[parameters.Count];
             var i = 0;
-            //[{ Key: "@MatchID",Val: "12199414"}]
             foreach (var p in parameters)
             {
                 var key = p.ParameterName ?? "null";
@@ -116,23 +102,84 @@ namespace jIAnSoft.Brook
                 t[i] = $"{{Key:'{key}',Val:'{value.ToString().Replace("\"", "\\\"")}'}}";
                 i++;
             }
-
             return $"[{string.Join(" ,", t)}]";
         }
 
         /// <summary>
         /// 
         /// </summary>
-        private void QueryCompleted()
+        /// <typeparam name="T"></typeparam>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        private static T CreateInstanceFromReader<T>(IDataRecord reader)
         {
-            Conn?.Close();
+            var instance = Activator.CreateInstance<T>();
+            for (var i = reader.FieldCount - 1; i >= 0; i--)
+            {
+                ReflectionHelpers.SetValue(instance, reader.GetName(i), reader.GetValue(i));
+            }
+            return instance;
         }
 
+
+        /// <summary>
+        /// Close connection
+        /// </summary>
+        private void QueryCompleted()
+        {
+            if (Conn.State == ConnectionState.Open)
+            {
+                Conn.Close();
+            }
+        }
+
+        /// <summary>
+        /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbConnection" /> class.
+        /// </summary>
+        /// <returns>A new instance of <see cref="T:System.Data.Common.DbConnection" />.</returns>
+        private DbConnection CreateConnection()
+        {
+            var con = _provider.CreateConnection();
+            if (con == null)
+            {
+                throw new SqlException(
+                    $"Cannot connect to specified sql server({_connStringSetting.Name} => {_connStringSetting.ConnectionString}).");
+            }
+            con.ConnectionString = _connStringSetting.ConnectionString;
+            return con;
+        }
+        
+        /// <summary>
+        /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbDataAdapter" /> class.
+        /// </summary>
+        /// <returns>A new instance of <see cref="T:System.Data.Common.DbDataAdapter" />.</returns>
+        private DbDataAdapter CreateDataAdapter()
+        {
+            var adapter = _provider.CreateDataAdapter();
+            if (adapter == null)
+            {
+                if (string.Equals("MySql.Data.MySqlClient", _dbConfig.ProviderName, StringComparison.Ordinal))
+                {
+                    adapter = Assembly.Load("MySql.Data").CreateInstance("MySql.Data.MySqlClient.MySqlDataAdapter") as DbDataAdapter;
+                }
+            }
+            if (adapter == null)
+            {
+                throw new SqlException(
+                    "DbProviderFactory can't create a new instance of the provider's DataAdapter class.");
+            }
+            return adapter;
+        }
+
+        /// <summary>
+        /// Creates and returns a <see cref="T:System.Data.Common.DbCommand" /> object associated with the current connection.
+        /// </summary>
+        /// <returns>A <see cref="T:System.Data.Common.DbCommand" /> object.</returns>
         private DbCommand CreateCommand(CommandType commandType, string sqlCmd, DbParameter[] parameters)
         {
             Conn = CreateConnection();
             var cmd = Conn.CreateCommand();
-            cmd.CommandTimeout = _dbConfiguration.CommandTimeOut;
+            cmd.CommandTimeout = _dbConfig.CommandTimeOut;
             cmd.CommandText = sqlCmd;
             cmd.CommandType = commandType;
             if (null != parameters)
@@ -142,6 +189,11 @@ namespace jIAnSoft.Brook
             Conn.Open();
             return cmd;
         }
+
+        /// <summary>
+        /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbParameter" /> class.
+        /// </summary>
+        /// <returns>A new instance of <see cref="T:System.Data.Common.DbParameter" />.</returns>
 
         internal DbParameter CreateParameter(string name, object value, DbType dbType, int size,
             ParameterDirection direction)
@@ -158,7 +210,8 @@ namespace jIAnSoft.Brook
             p.SourceColumn = string.Empty;
             return p;
         }
-        
+
+       
         /// <summary>
         ///  Execute SQL and return first row data that type is <see cref="T"/>.
         /// </summary>
@@ -169,17 +222,16 @@ namespace jIAnSoft.Brook
         internal T First<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
             var instance = default(T);
-            using (var reader = Reader(commandType, sqlCmd, parameters))
+            using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
             {
-                if (reader.HasRows && reader.Read())
+                using (var reader = cmd.ExecuteReader())
                 {
-                    instance = Activator.CreateInstance<T>();
-                    for (var i = reader.FieldCount - 1; i >= 0; i--)
+                    if (reader.HasRows && reader.Read())
                     {
-                        ReflectionHelpers.SetValue(instance, reader.GetName(i), reader.GetValue(i));
+                        instance = CreateInstanceFromReader<T>(reader);
                     }
+                    reader.Close();
                 }
-                reader.Close();
                 QueryCompleted();
             }
             return instance;
@@ -195,19 +247,17 @@ namespace jIAnSoft.Brook
         internal List<T> Query<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
         {
             var re = new List<T>();
-            using (var reader = Reader(commandType, sqlCmd, parameters))
+            using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
             {
-                while (reader.Read())
+                using (var reader = cmd.ExecuteReader())
                 {
-                    var instance = Activator.CreateInstance<T>();
-                    for (var i = reader.FieldCount - 1; i >= 0; i--)
+                    while (reader.HasRows && reader.Read())
                     {
-                        ReflectionHelpers.SetValue(instance, reader.GetName(i), reader.GetValue(i));
+                        var instance = CreateInstanceFromReader<T>(reader);
+                        re.Add(instance);
                     }
-                    re.Add(instance);
+                    reader.Close();
                 }
-                reader.Close();
-                QueryCompleted();
             }
             return re;
         }
@@ -225,18 +275,13 @@ namespace jIAnSoft.Brook
             {
                 var p = CreateParameter("@ReturnValue", null, DbType.String, 0, ParameterDirection.ReturnValue);
                 if (p == null) return default(T);
-                //dbParameter.ParameterName = "@ReturnValue";
-                //dbParameter.DbType = DbType.String;
-                //dbParameter.Direction = ParameterDirection.ReturnValue;
                 p.IsNullable = true;
-                // dbParameter.SourceColumn = string.Empty;
-                // dbParameter.SourceVersion = DataRowVersion.Default;
-                var dbParameters = new List<DbParameter> {p};
+                var dbParameters = new [] {p};
                 if (parameters != null)
                 {
-                    dbParameters.AddRange(parameters);
+                    dbParameters =  dbParameters.Concat(parameters).ToArray();
                 }
-                Execute(commandType, sqlCmd, dbParameters.ToArray());
+                Execute(commandType, sqlCmd, dbParameters);
                 if (null == p.Value)
                 {
                     return default(T);
@@ -264,10 +309,11 @@ namespace jIAnSoft.Brook
         {
             try
             {
-                var cmd = CreateCommand(commandType, sqlCmd, parameters);
-                var r = cmd.ExecuteNonQuery();
-                cmd.Dispose();
-                return r;
+                using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
+                {
+                    var r = cmd.ExecuteNonQuery();
+                    return r;
+                }
             }
             catch (Exception sqlEx)
             {
@@ -278,28 +324,7 @@ namespace jIAnSoft.Brook
                 QueryCompleted();
             }
         }
-
-        /// <summary>
-        ///  Execute SQL and return an <see cref="System.Data.Common.DbDataReader"/>.
-        /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        private DbDataReader Reader(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
-        {
-            try
-            {
-                var cmd = CreateCommand(commandType, sqlCmd, parameters);
-                var r = cmd.ExecuteReader();
-                return r;
-            }
-            catch (Exception sqlEx)
-            {
-                throw SqlException(sqlEx, sqlCmd, parameters);
-            }
-        }
-
+        
         /// <summary>
         ///  Execute SQL and return an <see cref="T"/>.
         /// </summary>
@@ -314,12 +339,45 @@ namespace jIAnSoft.Brook
                 using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
                 {
                     var result = cmd.ExecuteScalar();
-                    cmd.Dispose();
                     if (null == result)
                     {
                         return default(T);
                     }
                     return (T) Conversion.ConvertTo<T>(result);
+                }
+            }
+            catch (Exception sqlEx)
+            {
+                throw SqlException(sqlEx, sqlCmd, parameters);
+            }
+            finally
+            {
+                QueryCompleted();
+            }
+        }
+
+        /// <summary>
+        ///  Execute SQL and return an <see cref="System.Data.DataTable"/>..
+        /// </summary>
+        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        public DataTable Table(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        {
+            try
+            {
+                using (var t = new DataTable {Locale = Section.Get.Common.Culture})
+                {
+                    using (var adapter = CreateDataAdapter())
+                    {
+                        using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
+                        {
+                            adapter.SelectCommand = cmd;
+                            adapter.Fill(t);
+                            return t;
+                        }
+                    }
                 }
             }
             catch (Exception sqlEx)
@@ -343,29 +401,17 @@ namespace jIAnSoft.Brook
         {
             try
             {
-                var adapter = _provider.CreateDataAdapter();
-
-                if (adapter == null)
-                {
-                    if ("MySql.Data.MySqlClient" == _dbConfiguration.ProviderName)
-                    {
-                        adapter = Assembly.Load("MySql.Data")
-                            .CreateInstance("MySql.Data.MySqlClient.MySqlDataAdapter") as DbDataAdapter;
-                    }
-
-                    if (adapter == null)
-                    {
-                        throw new SqlException(
-                            "DbProviderFactory can't create a new instance of the provider's DataAdapter class.");
-                    }
-                }
-
                 using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
                 {
-                    adapter.SelectCommand = CreateCommand(commandType, sqlCmd, parameters);
-                    adapter.Fill(ds);
-                    adapter.Dispose();
-                    return ds;
+                    using (var adapter = CreateDataAdapter())
+                    {
+                        using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
+                        {
+                            adapter.SelectCommand = cmd;
+                            adapter.Fill(ds);
+                            return ds;
+                        }
+                    }
                 }
             }
             catch (Exception sqlEx)
@@ -429,17 +475,13 @@ namespace jIAnSoft.Brook
 
             if (null != Conn)
             {
-                if (Conn.State != ConnectionState.Open)
-                {
-                    Conn.Close();
-                }
-
+                QueryCompleted();
                 Conn.Dispose();
                 Conn = null;
             }
             _provider = null;
             _connStringSetting = null;
-            _dbConfiguration = null;
+            _dbConfig = null;
             _disposed = true;
         }
 

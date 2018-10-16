@@ -1,4 +1,6 @@
-﻿using jIAnSoft.Brook.Mapper;
+﻿using jIAnSoft.Brook.Configuration;
+using jIAnSoft.Brook.Mapper;
+using jIAnSoft.Nami.Clockwork;
 using MySql.Data.MySqlClient;
 using Npgsql;
 using NpgsqlTypes;
@@ -8,7 +10,6 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.IO;
-using jIAnSoft.Nami.Clockwork;
 
 namespace DemoNetCore
 {
@@ -79,7 +80,7 @@ namespace DemoNetCore
         private static void PostgreSql()
         {
             Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} From PostgreSQL");
-            var t = Brook.Load("postgresql").Table("SELECT id ,name ,email FROM public.account where name = @name;",
+            var t = Brook.Load("postgresql").Table("SELECT id1 ,name ,email FROM public.account where name = @name;",
                 new DbParameter[]
                 {
                     new NpgsqlParameter("@name", NpgsqlDbType.Varchar)
@@ -152,7 +153,7 @@ namespace DemoNetCore
 
                 var accounts =
                     db.Query<Account>(
-                        "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` order by `id` desc;;");
+                        "SELECT `id` AS `Id` ,`name` AS `Name`,`email` AS `Email` FROM `account` ORDER BY `id` DESC;");
                 foreach (var a in accounts)
                 {
                     Console.WriteLine($"Query   Id:{a.Id} Email:{a.Email} Name:{a.Name}");
@@ -161,17 +162,25 @@ namespace DemoNetCore
                 var one = db.One<int>(CommandType.StoredProcedure, "test.ReturnValue",
                     new[] {db.Parameter("@param1", 12, DbType.Int32)});
                 Console.WriteLine($"one is {one}");
+
+                using (var db1 = Brook.LoadFromConnectionString(Section.Get.Database.Which["mysql"].Connection))
+                {
+                    var two = db1.One<int>(CommandType.StoredProcedure, "test.ReturnValue",
+                        new[] {db.Parameter("@param1", DateTime.Now.Ticks / 1000 % 10000000, DbType.Int32)});
+                    Console.WriteLine($"two is {two}");
+                }
             }
         }
 
+
         private static void Main(string[] args)
         {
-            Nami.Every(1).Seconds().Do(() => {
+            Nami.Every(1000).Milliseconds().Do(() => {
                 try
                 {
-                    MsSql();
-                    PostgreSql();
-                    MySql();
+                   MsSql();
+                   PostgreSql();
+                   MySql();
                 }
                 catch (Exception ex)
                 {
