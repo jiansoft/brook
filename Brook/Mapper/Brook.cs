@@ -16,7 +16,7 @@ namespace jIAnSoft.Brook.Mapper
             {
                 Connection = dbConnectionString,
                 Name = dt.ToString(),
-                CommandTimeOut = timeout
+                CommandTimeout = timeout
             };
             switch (dt)
             {

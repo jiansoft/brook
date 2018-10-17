@@ -28,7 +28,7 @@ namespace jIAnSoft.Brook
         /// <summary>
         /// DatabaseConfiguration
         /// </summary>
-        private DatabaseConfiguration _dbConfig;
+        internal DatabaseConfiguration DbConfig;
 
         /// <summary>
         /// Connection resource
@@ -71,7 +71,7 @@ namespace jIAnSoft.Brook
                 Name = dbConfig.Name
             })
         {
-            _dbConfig = dbConfig;
+            DbConfig = dbConfig;
         }
 
         /// <inheritdoc />
@@ -89,7 +89,7 @@ namespace jIAnSoft.Brook
             _provider = DbProviderFactories.GetFactory(_connStringSetting.ProviderName);
 #endif
         }
-        
+
         private static string PrintDbParameters(IReadOnlyCollection<DbParameter> parameters)
         {
             if (null == parameters) return string.Empty;
@@ -102,6 +102,7 @@ namespace jIAnSoft.Brook
                 t[i] = $"{{Key:'{key}',Val:'{value.ToString().Replace("\"", "\\\"")}'}}";
                 i++;
             }
+
             return $"[{string.Join(" ,", t)}]";
         }
 
@@ -118,6 +119,7 @@ namespace jIAnSoft.Brook
             {
                 ReflectionHelpers.SetValue(instance, reader.GetName(i), reader.GetValue(i));
             }
+
             return instance;
         }
 
@@ -145,10 +147,11 @@ namespace jIAnSoft.Brook
                 throw new SqlException(
                     $"Cannot connect to specified sql server({_connStringSetting.Name} => {_connStringSetting.ConnectionString}).");
             }
+
             con.ConnectionString = _connStringSetting.ConnectionString;
             return con;
         }
-        
+
         /// <summary>
         /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbDataAdapter" /> class.
         /// </summary>
@@ -158,16 +161,20 @@ namespace jIAnSoft.Brook
             var adapter = _provider.CreateDataAdapter();
             if (adapter == null)
             {
-                if (string.Equals("MySql.Data.MySqlClient", _dbConfig.ProviderName, StringComparison.Ordinal))
+                if (string.Equals("MySql.Data.MySqlClient", DbConfig.ProviderName, StringComparison.Ordinal))
                 {
-                    adapter = Assembly.Load("MySql.Data").CreateInstance("MySql.Data.MySqlClient.MySqlDataAdapter") as DbDataAdapter;
+                    adapter =
+                        Assembly.Load("MySql.Data")
+                            .CreateInstance("MySql.Data.MySqlClient.MySqlDataAdapter") as DbDataAdapter;
                 }
             }
+
             if (adapter == null)
             {
                 throw new SqlException(
                     "DbProviderFactory can't create a new instance of the provider's DataAdapter class.");
             }
+
             return adapter;
         }
 
@@ -175,17 +182,18 @@ namespace jIAnSoft.Brook
         /// Creates and returns a <see cref="T:System.Data.Common.DbCommand" /> object associated with the current connection.
         /// </summary>
         /// <returns>A <see cref="T:System.Data.Common.DbCommand" /> object.</returns>
-        private DbCommand CreateCommand(CommandType commandType, string sqlCmd, DbParameter[] parameters)
+        private DbCommand CreateCommand(int timeout, CommandType type, string sql, DbParameter[] parameters)
         {
             Conn = CreateConnection();
             var cmd = Conn.CreateCommand();
-            cmd.CommandTimeout = _dbConfig.CommandTimeOut;
-            cmd.CommandText = sqlCmd;
-            cmd.CommandType = commandType;
+            cmd.CommandTimeout = timeout;
+            cmd.CommandText = sql;
+            cmd.CommandType = type;
             if (null != parameters)
             {
                 cmd.Parameters.AddRange(parameters);
             }
+
             Conn.Open();
             return cmd;
         }
@@ -194,16 +202,14 @@ namespace jIAnSoft.Brook
         /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbParameter" /> class.
         /// </summary>
         /// <returns>A new instance of <see cref="T:System.Data.Common.DbParameter" />.</returns>
-
-        internal DbParameter CreateParameter(string name, object value, DbType dbType, int size,
-            ParameterDirection direction)
+        internal DbParameter CreateParameter(string n, object v, DbType type, int size, ParameterDirection direction)
         {
             var p = _provider.CreateParameter();
             if (p == null)
                 throw new SqlException($"Cannot create a sql parameter ({_connStringSetting.Name}.");
-            p.ParameterName = name;
-            p.DbType = dbType;
-            p.Value = value;
+            p.ParameterName = n;
+            p.DbType = type;
+            p.Value = v;
             p.Size = size;
             p.Direction = direction;
             p.SourceVersion = DataRowVersion.Current;
@@ -211,18 +217,19 @@ namespace jIAnSoft.Brook
             return p;
         }
 
-       
+
         /// <summary>
         ///  Execute SQL and return first row data that type is <see cref="T"/>.
         /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="timeout"></param>
+        /// <param name="type">SQL command type SP、Text</param>
         /// <param name="sqlCmd">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal T First<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        internal T First<T>(int timeout, CommandType type, string sqlCmd, DbParameter[] parameters = null)
         {
             var instance = default(T);
-            using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
+            using (var cmd = CreateCommand(timeout, type, sqlCmd, parameters))
             {
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -230,24 +237,28 @@ namespace jIAnSoft.Brook
                     {
                         instance = CreateInstanceFromReader<T>(reader);
                     }
+
                     reader.Close();
                 }
+
                 QueryCompleted();
             }
+
             return instance;
         }
 
         /// <summary>
         ///  Execute SQL and return a <see cref="T"/> array.
         /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="timeout"></param>
+        /// <param name="type">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal List<T> Query<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        internal List<T> Query<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             var re = new List<T>();
-            using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
+            using (var cmd = CreateCommand(timeout, type, sql, parameters))
             {
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -256,41 +267,46 @@ namespace jIAnSoft.Brook
                         var instance = CreateInstanceFromReader<T>(reader);
                         re.Add(instance);
                     }
+
                     reader.Close();
                 }
             }
+
             return re;
         }
 
         /// <summary>
         /// Executes a SQL statement, and returns a value that from an operation such as a stored procedure, built-in function, or user-defined function.
         /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL command</param>
+        /// <param name="timeout"></param>
+        /// <param name="type">SQL command type SP、Text</param>
+        /// <param name="sql">SQL command</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal T Value<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        internal T Value<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             try
             {
                 var p = CreateParameter("@ReturnValue", null, DbType.String, 0, ParameterDirection.ReturnValue);
                 if (p == null) return default(T);
                 p.IsNullable = true;
-                var dbParameters = new [] {p};
+                var dbParameters = new[] {p};
                 if (parameters != null)
                 {
-                    dbParameters =  dbParameters.Concat(parameters).ToArray();
+                    dbParameters = dbParameters.Concat(parameters).ToArray();
                 }
-                Execute(commandType, sqlCmd, dbParameters);
+
+                Execute(timeout, type, sql, dbParameters);
                 if (null == p.Value)
                 {
                     return default(T);
                 }
+
                 return (T) Conversion.ConvertTo<T>(p.Value);
             }
             catch (Exception sqlEx)
             {
-                throw SqlException(sqlEx, sqlCmd, parameters);
+                throw SqlException(sqlEx, sql, parameters);
             }
             finally
             {
@@ -301,15 +317,16 @@ namespace jIAnSoft.Brook
         /// <summary>
         ///  Executes a SQL statement against the connection and returns the number of rows affected.
         /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="timeout"></param>
+        /// <param name="type">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public int Execute(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        public int Execute(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             try
             {
-                using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
+                using (var cmd = CreateCommand(timeout, type, sql, parameters))
                 {
                     var r = cmd.ExecuteNonQuery();
                     return r;
@@ -317,38 +334,40 @@ namespace jIAnSoft.Brook
             }
             catch (Exception sqlEx)
             {
-                throw SqlException(sqlEx, sqlCmd, parameters);
+                throw SqlException(sqlEx, sql, parameters);
             }
             finally
             {
                 QueryCompleted();
             }
         }
-        
+
         /// <summary>
         ///  Execute SQL and return an <see cref="T"/>.
         /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="timeout"></param>
+        /// <param name="type">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public T One<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        public T One<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             try
             {
-                using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
+                using (var cmd = CreateCommand(timeout, type, sql, parameters))
                 {
                     var result = cmd.ExecuteScalar();
                     if (null == result)
                     {
                         return default(T);
                     }
+
                     return (T) Conversion.ConvertTo<T>(result);
                 }
             }
             catch (Exception sqlEx)
             {
-                throw SqlException(sqlEx, sqlCmd, parameters);
+                throw SqlException(sqlEx, sql, parameters);
             }
             finally
             {
@@ -359,11 +378,12 @@ namespace jIAnSoft.Brook
         /// <summary>
         ///  Execute SQL and return an <see cref="System.Data.DataTable"/>..
         /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="timeout"></param>
+        /// <param name="type">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public DataTable Table(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        public DataTable Table(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             try
             {
@@ -371,7 +391,7 @@ namespace jIAnSoft.Brook
                 {
                     using (var adapter = CreateDataAdapter())
                     {
-                        using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
+                        using (var cmd = CreateCommand(timeout, type, sql, parameters))
                         {
                             adapter.SelectCommand = cmd;
                             adapter.Fill(t);
@@ -382,7 +402,7 @@ namespace jIAnSoft.Brook
             }
             catch (Exception sqlEx)
             {
-                throw SqlException(sqlEx, sqlCmd, parameters);
+                throw SqlException(sqlEx, sql, parameters);
             }
             finally
             {
@@ -393,11 +413,12 @@ namespace jIAnSoft.Brook
         /// <summary>
         ///  Execute SQL and return an <see cref="System.Data.DataSet"/>.
         /// </summary>
-        /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="timeout"></param>
+        /// <param name="type">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public DataSet DataSet(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        public DataSet DataSet(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             try
             {
@@ -405,7 +426,7 @@ namespace jIAnSoft.Brook
                 {
                     using (var adapter = CreateDataAdapter())
                     {
-                        using (var cmd = CreateCommand(commandType, sqlCmd, parameters))
+                        using (var cmd = CreateCommand(timeout, type, sql, parameters))
                         {
                             adapter.SelectCommand = cmd;
                             adapter.Fill(ds);
@@ -416,7 +437,7 @@ namespace jIAnSoft.Brook
             }
             catch (Exception sqlEx)
             {
-                throw SqlException(sqlEx, sqlCmd, parameters);
+                throw SqlException(sqlEx, sql, parameters);
             }
             finally
             {
@@ -479,9 +500,10 @@ namespace jIAnSoft.Brook
                 Conn.Dispose();
                 Conn = null;
             }
+
             _provider = null;
             _connStringSetting = null;
-            _dbConfig = null;
+            DbConfig = null;
             _disposed = true;
         }
 

@@ -14,7 +14,7 @@ namespace DemoNetFramework
         private static void PostgreSql()
         {
             Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} From PostgreSQL");
-            var t = Brook.Load("postgresql").Table("SELECT id ,name ,email FROM public.account where name = @name;",
+            var t = Brook.Load("posql").Table("SELECT id ,name ,email FROM public.account where name = @name;",
                 new DbParameter[]
                 {
                     new NpgsqlParameter("@name", NpgsqlDbType.Varchar)
@@ -27,7 +27,7 @@ namespace DemoNetFramework
                 Console.WriteLine($"t    {row[0]} {row[1]} {row[2]}");
             }
 
-            var db = Brook.Load("postgresql");
+            var db = Brook.Load("posql");
             var ds = db.DataSet("SELECT id ,name ,email FROM public.account where name = @name;",
                 new[]
                 {

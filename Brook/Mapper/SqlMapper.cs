@@ -105,162 +105,253 @@ namespace jIAnSoft.Brook.Mapper
         /// <summary>
         ///  Execute SQL and return first row data that type is <see cref="T"/>.
         /// </summary>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public T First<T>(string sqlCmd, DbParameter[] parameters = null)
+        public T First<T>(string sql, DbParameter[] parameters = null)
         {
-            return First<T>(CommandType.Text, sqlCmd, parameters);
+            return First<T>(CommandType.Text, sql, parameters);
         }
 
         /// <summary>
         ///  Execute SQL and return first row data that type is <see cref="T"/>.
         /// </summary>
         /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public T First<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        public T First<T>(CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            return _db.First<T>(commandType, sqlCmd, parameters);
+            return First<T>(_db.DbConfig.CommandTimeout, commandType, sql, parameters);
+        }
+
+        /// <summary>
+        ///  Execute SQL and return first row data that type is <see cref="T"/>.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        public T First<T>(int timeout, CommandType commandType, string sql, DbParameter[] parameters = null)
+        {
+            return _db.First<T>(timeout,commandType, sql, parameters);
         }
 
         /// <summary>
         ///  Execute SQL and return a DataTable <see cref="DataTable"/>.
         /// </summary>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public DataTable Table(string sqlCmd, DbParameter[] parameters = null)
+        public DataTable Table(string sql, DbParameter[] parameters = null)
         {
-            return Table(CommandType.Text, sqlCmd, parameters);
+            return Table(CommandType.Text, sql, parameters);
         }
 
         /// <summary>
         ///  Execute SQL and return a DataTable <see cref="DataTable"/>.
         /// </summary>
         /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public DataTable Table(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        public DataTable Table(CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            return _db.Table(commandType, sqlCmd, parameters);
+            return Table(_db.DbConfig.CommandTimeout, commandType, sql, parameters);
+        }
+
+        /// <summary>
+        ///  Execute SQL and return a DataTable <see cref="DataTable"/>.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        public DataTable Table(int timeout, CommandType commandType, string sql, DbParameter[] parameters = null)
+        {
+            return _db.Table(timeout,commandType, sql, parameters);
         }
 
         /// <summary>
         ///  Execute SQL and return a <see cref="System.Data.DataSet"/>.
         /// </summary>
-        /// <param name="sqlCmd"></param>
+        /// <param name="sql"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public DataSet DataSet(string sqlCmd, DbParameter[] parameters = null)
+        public DataSet DataSet(string sql, DbParameter[] parameters = null)
         {
-            return DataSet(CommandType.Text, sqlCmd, parameters);
+            return DataSet(CommandType.Text, sql, parameters);
         }
 
         /// <summary>
         ///  Execute SQL and return a <see cref="System.Data.DataSet"/>.
         /// </summary>
         /// <param name="commandType"></param>
-        /// <param name="sqlCmd"></param>
+        /// <param name="sql"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public DataSet DataSet(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        public DataSet DataSet(CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            return _db.DataSet(commandType, sqlCmd, parameters);
+            return DataSet(_db.DbConfig.CommandTimeout,commandType, sql, parameters);
+        }
+
+        /// <summary>
+        ///  Execute SQL and return a <see cref="System.Data.DataSet"/>.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="commandType"></param>
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public DataSet DataSet(int timeout,CommandType commandType, string sql, DbParameter[] parameters = null)
+        {
+            return _db.DataSet(timeout, commandType, sql, parameters);
         }
 
         /// <summary>
         ///  Execute SQL and return a <see cref="T"/> array.
         /// </summary>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public List<T> Query<T>(string sqlCmd, DbParameter[] parameters = null)
+        public List<T> Query<T>(string sql, DbParameter[] parameters = null)
         {
-            return Query<T>(CommandType.Text, sqlCmd, parameters);
+            return Query<T>(CommandType.Text, sql, parameters);
         }
 
         /// <summary>
         ///  Execute SQL and return a <see cref="T"/> array.
         /// </summary>
         /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public List<T> Query<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        public List<T> Query<T>(CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            return _db.Query<T>(commandType, sqlCmd, parameters);
+            return Query<T>(_db.DbConfig.CommandTimeout, commandType, sql, parameters);
         }
-        
+
+        /// <summary>
+        ///  Execute SQL and return a <see cref="T"/> array.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        public List<T> Query<T>(int timeout,CommandType commandType, string sql, DbParameter[] parameters = null)
+        {
+            return _db.Query<T>(timeout,commandType, sql, parameters);
+        }
+
         /// <summary>
         /// Executes a SQL statement, and returns a value that from an operation such as a stored procedure, built-in function, or user-defined function.
         /// </summary>
-        /// <param name="sqlCmd">SQL command</param>
+        /// <param name="sql">SQL command</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public T Value<T>(string sqlCmd, DbParameter[] parameters = null)
+        public T Value<T>(string sql, DbParameter[] parameters = null)
         {
-            return Value<T>(CommandType.Text, sqlCmd, parameters);
+            return Value<T>(CommandType.Text, sql, parameters);
         }
 
         /// <summary>
         /// Executes a SQL statement, and returns a value that from an operation such as a stored procedure, built-in function, or user-defined function.
         /// </summary>
         /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL command</param>
+        /// <param name="sql">SQL command</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public T Value<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        public T Value<T>(CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            return _db.Value<T>(commandType, sqlCmd, parameters);
+            return Value<T>(_db.DbConfig.CommandTimeout,commandType, sql, parameters);
         }
-        
+
+        /// <summary>
+        /// Executes a SQL statement, and returns a value that from an operation such as a stored procedure, built-in function, or user-defined function.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="sql">SQL command</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        public T Value<T>(int timeout, CommandType commandType, string sql, DbParameter[] parameters = null)
+        {
+            return _db.Value<T>(timeout, commandType, sql, parameters);
+        }
+
         /// <summary>
         /// Executes a SQL statement against the connection and returns the number of rows affected.
         /// </summary>
-        /// <param name="sqlCmd">SQL 指令</param>
+        /// <param name="sql">SQL 指令</param>
         /// <param name="parameters">SQL 指令參數</param>
         /// <returns></returns>
-        public int Execute(string sqlCmd, DbParameter[] parameters = null)
+        public int Execute(string sql, DbParameter[] parameters = null)
         {
-            return Execute(CommandType.Text, sqlCmd, parameters);
+            return Execute(CommandType.Text, sql, parameters);
         }
 
         /// <summary>
         ///  Executes a SQL statement against the connection and returns the number of rows affected.
         /// </summary>
         /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public int Execute(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        public int Execute(CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            return _db.Execute(commandType, sqlCmd, parameters);
+            return Execute(_db.DbConfig.CommandTimeout,commandType, sql, parameters);
+        }
+
+        /// <summary>
+        ///  Executes a SQL statement against the connection and returns the number of rows affected.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        public int Execute(int timeout,CommandType commandType, string sql, DbParameter[] parameters = null)
+        {
+            return _db.Execute(timeout,commandType, sql, parameters);
         }
 
         /// <summary>
         /// Execute SQL and return first row and column as a <see cref="T"/>.
         /// </summary>
-        /// <param name="sqlCmd">SQL 指令</param>
+        /// <param name="sql">SQL 指令</param>
         /// <param name="parameters">SQL 指令參數</param>
         /// <returns></returns>
-        public T One<T>(string sqlCmd, DbParameter[] parameters = null)
+        public T One<T>(string sql, DbParameter[] parameters = null)
         {
-            return One<T>(CommandType.Text, sqlCmd, parameters);
+            return One<T>(CommandType.Text, sql, parameters);
         }
 
         /// <summary>
         ///  Execute SQL and return first row and column as a <see cref="T"/>.
         /// </summary>
         /// <param name="commandType">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public T One<T>(CommandType commandType, string sqlCmd, DbParameter[] parameters = null)
+        public T One<T>(CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            return _db.One<T>(commandType, sqlCmd, parameters);
+            return One<T>(_db.DbConfig.CommandTimeout,commandType, sql, parameters);
+        }
+
+        /// <summary>
+        ///  Execute SQL and return first row and column as a <see cref="T"/>.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        public T One<T>(int timeout,CommandType commandType, string sql, DbParameter[] parameters = null)
+        {
+            return _db.One<T>(timeout,commandType, sql, parameters);
         }
 
         private void Dispose(bool disposing)
