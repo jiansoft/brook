@@ -36,8 +36,16 @@
 
         private Section()
         {
-            var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("app.json", true, true);
+            var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory());
+            if (File.Exists("app.json"))
+            {
+                builder.AddJsonFile("app.json", true, true);
+            }
+            else if (File.Exists("appsettings.json"))
+            {
+                builder.AddJsonFile("appsettings.json", true, true);
+            }
+
             Figuration = builder.Build();
 
             var co = new List<DatabaseConfiguration>();

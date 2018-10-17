@@ -98,7 +98,6 @@ namespace DemoNetFramework
 
         private static void Main(string[] args)
         {
-           
             Nami.Every(1).Seconds().Do(() => {
                 try
                 {

@@ -80,7 +80,7 @@ namespace DemoNetCore
         private static void PostgreSql()
         {
             Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} From PostgreSQL");
-            var t = Brook.Load("postgresql").Table("SELECT id1 ,name ,email FROM public.account where name = @name;",
+            var t = Brook.Load("postgresql").Table("SELECT id ,name ,email FROM public.account where name = @name;",
                 new DbParameter[]
                 {
                     new NpgsqlParameter("@name", NpgsqlDbType.Varchar)
