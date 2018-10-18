@@ -12,19 +12,19 @@
       "Name": "mysql",
       "Connection": "server=192.168.1.138;port=3309;uid=pi;pwd=1qaz@WSX;database=test;SslMode=None",
       "ProviderName": "MySql.Data.MySqlClient",
-      "CommandTimeout": 15
+      "CommandTimeout": 5
     },
     {
       "Name": "mssql",
-      "Connection": "server=192.168.1.213;port=1433;uid=pi;pwd=1qaz@WSX;database=test;Connection Timeout=5;",
+      "Connection": "server=192.168.1.138;port=1433;uid=pi;pwd=1qaz@WSX;database=test;Connection Timeout=5;",
       "ProviderName": "System.Data.SqlClient",
-      "CommandTimeout": 15
+      "CommandTimeout": 5
     },
     {
       "Name": "posql",
       "Connection": "server=192.168.1.138;port=5432;uid=pi;pwd=1qaz@WSX;database=test;",
       "ProviderName": "Npgsql",
-      "CommandTimeout": 15
+      "CommandTimeout": 5
     }
   ],
   "key": "7533967",

@@ -81,19 +81,21 @@ namespace jIAnSoft.Brook
         private DbProvider(ConnectionStringSettings connStringStringSettings)
         {
             _connStringSetting = connStringStringSettings;
-
-#if NET451
-            _provider = System.Data.Common.DbProviderFactories.GetFactory(_connStringSetting.ProviderName);
+#if NET461
+            _provider = DbProviderFactories.GetFactory(_connStringSetting.ProviderName);
 #elif NETSTANDARD2_0
-
             _provider = DbProviderFactories.GetFactory(_connStringSetting.ProviderName);
 #endif
         }
 
-        private static string PrintDbParameters(IReadOnlyCollection<DbParameter> parameters)
+        private static string PrintDbParameters(DbParameter[] parameters)
         {
-            if (null == parameters) return string.Empty;
-            var t = new string[parameters.Count];
+            if (null == parameters)
+            {
+                return string.Empty;
+            }
+
+            var t = new string[parameters.Length];
             var i = 0;
             foreach (var p in parameters)
             {
@@ -206,7 +208,10 @@ namespace jIAnSoft.Brook
         {
             var p = _provider.CreateParameter();
             if (p == null)
+            {
                 throw new SqlException($"Cannot create a sql parameter ({_connStringSetting.Name}.");
+            }
+
             p.ParameterName = n;
             p.DbType = type;
             p.Value = v;
@@ -216,20 +221,19 @@ namespace jIAnSoft.Brook
             p.SourceColumn = string.Empty;
             return p;
         }
-
-
+        
         /// <summary>
         ///  Execute SQL and return first row data that type is <see cref="T"/>.
         /// </summary>
         /// <param name="timeout"></param>
         /// <param name="type">SQL command type SP、Text</param>
-        /// <param name="sqlCmd">SQL cmd</param>
+        /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal T First<T>(int timeout, CommandType type, string sqlCmd, DbParameter[] parameters = null)
+        internal T First<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             var instance = default(T);
-            using (var cmd = CreateCommand(timeout, type, sqlCmd, parameters))
+            using (var cmd = CreateCommand(timeout, type, sql, parameters))
             {
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -482,11 +486,10 @@ namespace jIAnSoft.Brook
             }
         }*/
 
-        private SqlException SqlException(Exception sqlEx, string sqlCmd,
-            IReadOnlyCollection<DbParameter> parameters = null)
+        private SqlException SqlException(Exception sqlEx, string sql, DbParameter[] parameters = null)
         {
             var errStr =
-                $"{sqlEx.Message}\nSource = {_connStringSetting.Name}\nCmd = {sqlCmd}\nParam = {PrintDbParameters(parameters)}\n";
+                $"Source = {_connStringSetting.Name}\nCmd = {sql}\nParam = {PrintDbParameters(parameters)}\n{sqlEx.Message}\n";
             return new SqlException(errStr, sqlEx);
         }
 

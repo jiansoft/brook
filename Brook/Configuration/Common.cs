@@ -5,7 +5,7 @@ using System.Globalization;
 
 namespace jIAnSoft.Brook.Configuration
 {
-#if NET451
+#if NET461
     using System.Configuration;
 
     public class Common : ConfigurationElement

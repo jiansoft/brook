@@ -5,13 +5,12 @@ using MySql.Data.MySqlClient;
 using Npgsql;
 using NpgsqlTypes;
 using System;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.IO;
 
-namespace DemoNetCore
+namespace Example
 {
     internal static class Program
     {
@@ -19,57 +18,57 @@ namespace DemoNetCore
         {
             const string OUTPUTFILENAME = @"./TimeZoneInfo.txt";
 
-            DateTimeFormatInfo dateFormats = CultureInfo.CurrentCulture.DateTimeFormat;
-            ReadOnlyCollection<TimeZoneInfo> timeZones = TimeZoneInfo.GetSystemTimeZones();
-            StreamWriter sw = new StreamWriter(OUTPUTFILENAME, false);
+            var dateFormats = CultureInfo.CurrentCulture.DateTimeFormat;
+            var timeZones = TimeZoneInfo.GetSystemTimeZones();
+            var sw = new StreamWriter(OUTPUTFILENAME, false);
 
-            foreach (TimeZoneInfo timeZone in timeZones)
+            foreach (var timeZone in timeZones)
             {
-                bool hasDST = timeZone.SupportsDaylightSavingTime;
-                TimeSpan offsetFromUtc = timeZone.BaseUtcOffset;
-                TimeZoneInfo.AdjustmentRule[] adjustRules;
-                string offsetString;
+                var hasDst = timeZone.SupportsDaylightSavingTime;
+                var offsetFromUtc = timeZone.BaseUtcOffset;
 
                 sw.WriteLine("ID: {0}", timeZone.Id);
                 sw.WriteLine("   Display Name: {0, 40}", timeZone.DisplayName);
                 sw.WriteLine("   Standard Name: {0, 39}", timeZone.StandardName);
                 sw.Write("   Daylight Name: {0, 39}", timeZone.DaylightName);
-                sw.Write(hasDST ? "   ***Has " : "   ***Does Not Have ");
+                sw.Write(hasDst ? "   ***Has " : "   ***Does Not Have ");
                 sw.WriteLine("Daylight Saving Time***");
-                offsetString = String.Format("{0} hours, {1} minutes", offsetFromUtc.Hours, offsetFromUtc.Minutes);
+                var offsetString = $"{offsetFromUtc.Hours} hours, {offsetFromUtc.Minutes} minutes";
                 sw.WriteLine("   Offset from UTC: {0, 40}", offsetString);
-                adjustRules = timeZone.GetAdjustmentRules();
+                var adjustRules = timeZone.GetAdjustmentRules();
                 sw.WriteLine("   Number of adjustment rules: {0, 26}", adjustRules.Length);
-                if (adjustRules.Length > 0)
+                if (adjustRules.Length <= 0)
                 {
-                    sw.WriteLine("   Adjustment Rules:");
-                    foreach (TimeZoneInfo.AdjustmentRule rule in adjustRules)
-                    {
-                        TimeZoneInfo.TransitionTime transTimeStart = rule.DaylightTransitionStart;
-                        TimeZoneInfo.TransitionTime transTimeEnd = rule.DaylightTransitionEnd;
+                    continue;
+                }
 
-                        sw.WriteLine("      From {0} to {1}", rule.DateStart, rule.DateEnd);
-                        sw.WriteLine("      Delta: {0}", rule.DaylightDelta);
-                        if (!transTimeStart.IsFixedDateRule)
-                        {
-                            sw.WriteLine("      Begins at {0:t} on {1} of week {2} of {3}", transTimeStart.TimeOfDay,
-                                transTimeStart.DayOfWeek,
-                                transTimeStart.Week,
-                                dateFormats.MonthNames[transTimeStart.Month - 1]);
-                            sw.WriteLine("      Ends at {0:t} on {1} of week {2} of {3}", transTimeEnd.TimeOfDay,
-                                transTimeEnd.DayOfWeek,
-                                transTimeEnd.Week,
-                                dateFormats.MonthNames[transTimeEnd.Month - 1]);
-                        }
-                        else
-                        {
-                            sw.WriteLine("      Begins at {0:t} on {1} {2}", transTimeStart.TimeOfDay,
-                                transTimeStart.Day,
-                                dateFormats.MonthNames[transTimeStart.Month - 1]);
-                            sw.WriteLine("      Ends at {0:t} on {1} {2}", transTimeEnd.TimeOfDay,
-                                transTimeEnd.Day,
-                                dateFormats.MonthNames[transTimeEnd.Month - 1]);
-                        }
+                sw.WriteLine("   Adjustment Rules:");
+                foreach (var rule in adjustRules)
+                {
+                    var transTimeStart = rule.DaylightTransitionStart;
+                    var transTimeEnd = rule.DaylightTransitionEnd;
+
+                    sw.WriteLine("      From {0} to {1}", rule.DateStart, rule.DateEnd);
+                    sw.WriteLine("      Delta: {0}", rule.DaylightDelta);
+                    if (!transTimeStart.IsFixedDateRule)
+                    {
+                        sw.WriteLine("      Begins at {0:t} on {1} of week {2} of {3}", transTimeStart.TimeOfDay,
+                            transTimeStart.DayOfWeek,
+                            transTimeStart.Week,
+                            dateFormats.MonthNames[transTimeStart.Month - 1]);
+                        sw.WriteLine("      Ends at {0:t} on {1} of week {2} of {3}", transTimeEnd.TimeOfDay,
+                            transTimeEnd.DayOfWeek,
+                            transTimeEnd.Week,
+                            dateFormats.MonthNames[transTimeEnd.Month - 1]);
+                    }
+                    else
+                    {
+                        sw.WriteLine("      Begins at {0:t} on {1} {2}", transTimeStart.TimeOfDay,
+                            transTimeStart.Day,
+                            dateFormats.MonthNames[transTimeStart.Month - 1]);
+                        sw.WriteLine("      Ends at {0:t} on {1} {2}", transTimeEnd.TimeOfDay,
+                            transTimeEnd.Day,
+                            dateFormats.MonthNames[transTimeEnd.Month - 1]);
                     }
                 }
             }
@@ -106,8 +105,7 @@ namespace DemoNetCore
                 }
             }
         }
-
-
+        
         private static void MsSql()
         {
             Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} From MsSQL");
@@ -125,8 +123,8 @@ namespace DemoNetCore
             using (var db = Brook.Load("mysql"))
             {
                 var t = db.Table(
-                    "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = ?name;",
-                    new[] {db.Parameter("?name", "Ben Nuttall", DbType.String)});
+                    "SELECT `id`,`name`,`email` FROM `account` WHERE `name` = @name;",
+                    new[] {db.Parameter("@name", "Ben Nuttall", DbType.String)});
                 foreach (DataRow row in t.Rows)
                 {
                     Console.WriteLine($"t    {row[0]} {row[1]} {row[2]}");
@@ -175,19 +173,27 @@ namespace DemoNetCore
 
         private static void Main(string[] args)
         {
-            Nami.Every(1000).Milliseconds().Do(() => {
+#if NETCOREAPP2_1 
+            if (File.Exists("Example.dll.config"))
+            {
+                //There need to delete .net framework config file if we run the program as .net core app
+                File.Delete("Example.dll.config");
+            }
+#endif
+            Nami.Every(1000).Milliseconds().Do(() =>
+            {
                 try
                 {
-                   MsSql();
+                   //MsSql();
                    PostgreSql();
                    MySql();
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
-                }               
+                }
             });
-           
+
             Console.ReadKey();
         }
     }
@@ -198,5 +204,5 @@ namespace DemoNetCore
         public string Email { get; set; }
         public string Name { get; set; }
     }
-
 }
+
