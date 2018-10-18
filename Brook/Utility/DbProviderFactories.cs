@@ -45,10 +45,20 @@ namespace jIAnSoft.Brook.Utility
                         Description = ".Net Framework Data Provider for PostgreSql",
                         Type = "Npgsql.NpgsqlFactory, Npgsql"
                     }
+                },
+                {
+                    "System.Data.SQLite",
+                    new DbProviderFactoryConfigItem
+                    {
+                        Name = "SQLite Data Provider",
+                        Invariant = "System.Data.SQLite",
+                        Description = ".NET Framework Data Provider for SQLite",
+                        Type = "System.Data.SQLite.SQLiteFactory, System.Data.SQLite"
+                    }
                 }
             };
         }
-        
+
         public static DbProviderFactory GetFactory(string providerInvariantName)
         {
             if (string.IsNullOrWhiteSpace(providerInvariantName))
