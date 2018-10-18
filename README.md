@@ -3,7 +3,7 @@ A high performance micro sql helper supporting SQL Server、MySql、PostgreSQL
 
 [![NuGet](https://img.shields.io/nuget/v/jIAnSoft.Brook.svg?label=nuget&style=flat-square)](https://www.nuget.org/packages/jIAnSoft.Brook/)
 
-Supported .NET Framework 4.5.1 and .Net Core 2.0
+Supported .NET Framework 4.6.1 and .NET Standard 2.0
 
 Usage
 ================
@@ -37,7 +37,6 @@ Parameters format like below.
   <system.data>
     <DbProviderFactories>
         <!-- If use MySQL, Need register MySql's provider factory-->
-        <!-- ** only MySql's provider version 6.9.x series can be used **-->
         <remove invariant="MySql.Data.MySqlClient" />
         <add name="MySQL Data Provider" invariant="MySql.Data.MySqlClient" description=".Net Framework Data Provider for MySQL" type="MySql.Data.MySqlClient.MySqlClientFactory, MySql.Data, Version=6.9.12.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d" />
         <!-- If use PostgreSQL, Need register Npgsql's provider factory -->
@@ -95,7 +94,7 @@ public class Account
     public string Name { get; set; }
 }
 ```
-You can see the example code in both DemoNetFramework and DemoNetCore demo projects.
+You can see more example code in the example projects.
 
 ## License
 
