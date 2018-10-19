@@ -16,7 +16,7 @@
     },
     {
       "Name": "mssql",
-      "Connection": "server=192.168.1.138;port=1433;uid=pi;pwd=1qaz@WSX;database=test;Connection Timeout=5;",
+      "Connection": "server=192.168.1.213,1433;uid=pi;pwd=1qaz@WSX;database=test;Connection Timeout=5;",
       "ProviderName": "System.Data.SqlClient",
       "CommandTimeout": 5
     },
