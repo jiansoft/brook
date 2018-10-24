@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="jIAnSoft.Nami" Version="18.9.20.1613" />
-    <PackageReference Include="MySql.Data" Version="8.0.12" />
+    <PackageReference Include="jIAnSoft.Nami" Version="18.10.23" />
+    <PackageReference Include="MySql.Data" Version="8.0.13" />
     <PackageReference Include="Npgsql" Version="4.0.3" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.109.2" />
