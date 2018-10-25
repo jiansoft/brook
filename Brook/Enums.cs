@@ -2,9 +2,10 @@
 {
     public enum DatabaseType
     {
-        MySql,
-        SqlServer,
-        PostgreSql,
+        MySQL,
+        SQLServer,
+        PostgreSQL,
+        SQLite
         //Oracle,
     }
 }

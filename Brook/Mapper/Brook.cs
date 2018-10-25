@@ -10,7 +10,7 @@ namespace jIAnSoft.Brook.Mapper
         }
 
         public static SqlMapper LoadFromConnectionString(string dbConnectionString,
-            DatabaseType dt = DatabaseType.MySql,int timeout = 5)
+            DatabaseType dt = DatabaseType.MySQL,int timeout = 5)
         {
             var dbConfig = new DatabaseConfiguration
             {
@@ -20,14 +20,17 @@ namespace jIAnSoft.Brook.Mapper
             };
             switch (dt)
             {
-                case DatabaseType.SqlServer:
+                case DatabaseType.SQLServer:
                     dbConfig.ProviderName = "System.Data.SqlClient";
                     break;
-                case DatabaseType.PostgreSql:
+                case DatabaseType.PostgreSQL:
                     dbConfig.ProviderName = "Npgsql";
                     break;
-                case DatabaseType.MySql:
+                case DatabaseType.MySQL:
                     dbConfig.ProviderName = "MySql.Data.MySqlClient";
+                    break;
+                case DatabaseType.SQLite:
+                    dbConfig.ProviderName = "System.Data.SQLite";
                     break;
             }
 
