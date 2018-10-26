@@ -10,7 +10,7 @@
   "Database": [
     {
       "Name": "mysql",
-      "Connection": "server=192.168.1.138;port=3309;uid=pi;pwd=1qaz@WSX;database=test;SslMode=None;max pool size=1000;",
+      "Connection": "server=192.168.1.138;port=3306;uid=pi;pwd=1qaz@WSX;database=test;SslMode=None;",
       "ProviderName": "MySql.Data.MySqlClient",
       "CommandTimeout": 5
     },
@@ -22,7 +22,7 @@
     },
     {
       "Name": "posql",
-      "Connection": "server=192.168.1.138;port=5432;uid=pi;pwd=1qaz@WSX;database=test;Connection Idle Lifetime=10;Maximum Pool Size=1000;",
+      "Connection": "server=192.168.1.138;port=5432;uid=pi;pwd=1qaz@WSX;database=test;",
       "ProviderName": "Npgsql",
       "CommandTimeout": 5
     },

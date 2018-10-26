@@ -33,7 +33,7 @@ namespace jIAnSoft.Brook
         /// <summary>
         /// Connection resource
         /// </summary>
-        private DbConnection Conn { get; set; }
+        internal DbConnection Conn { get; set; }
 
         /// <summary>
         /// 目前連線的資料庫位置
@@ -88,14 +88,14 @@ namespace jIAnSoft.Brook
 #endif
         }
 
-        private static string PrintDbParameters(DbParameter[] parameters)
+        private static string PrintDbParameters(IReadOnlyCollection<DbParameter> parameters)
         {
             if (null == parameters)
             {
                 return string.Empty;
             }
 
-            var t = new string[parameters.Length];
+            var t = new string[parameters.Count];
             var i = 0;
             foreach (var p in parameters)
             {
@@ -141,7 +141,7 @@ namespace jIAnSoft.Brook
         /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbConnection" /> class.
         /// </summary>
         /// <returns>A new instance of <see cref="T:System.Data.Common.DbConnection" />.</returns>
-        internal DbConnection CreateConnection()
+        private DbConnection CreateConnection()
         {
             var con = _provider.CreateConnection();
             if (con == null)
@@ -187,10 +187,17 @@ namespace jIAnSoft.Brook
         private DbCommand CreateCommand(int timeout, CommandType type, string sql, DbParameter[] parameters)
         {
             Conn = CreateConnection();
-            var cmd = Conn.CreateCommand();
+            var cmd = _provider.CreateCommand();
+            if (cmd == null)
+            {
+                throw new SqlException($"Cannot create a sql command ({DbConfig.Name}.");
+            }
+
             cmd.CommandTimeout = timeout;
             cmd.CommandText = sql;
             cmd.CommandType = type;
+            cmd.Connection = Conn;
+          
             if (null != parameters)
             {
                 cmd.Parameters.AddRange(parameters);
@@ -209,7 +216,7 @@ namespace jIAnSoft.Brook
             var p = _provider.CreateParameter();
             if (p == null)
             {
-                throw new SqlException($"Cannot create a sql parameter ({_connStringSetting.Name}.");
+                throw new SqlException($"Cannot create a sql parameter ({DbConfig.Name}.");
             }
 
             p.ParameterName = n;
@@ -221,7 +228,7 @@ namespace jIAnSoft.Brook
             p.SourceColumn = string.Empty;
             return p;
         }
-        
+
         /// <summary>
         ///  Execute SQL and return first row data that type is <see cref="T"/>.
         /// </summary>
@@ -488,8 +495,7 @@ namespace jIAnSoft.Brook
 
         private SqlException SqlException(Exception sqlEx, string sql, DbParameter[] parameters = null)
         {
-            var errStr =
-                $"Source = {_connStringSetting.Name}\nCmd = {sql}\nParam = {PrintDbParameters(parameters)}\n{sqlEx.Message}\n";
+            var errStr = $"Source = {DbConfig.Name}\nCmd = {sql}\nParam = {PrintDbParameters(parameters)}\n{sqlEx.Message}\n";
             return new SqlException(errStr, sqlEx);
         }
 

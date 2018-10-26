@@ -3,8 +3,10 @@ using jIAnSoft.Nami.Clockwork;
 using NLog;
 using System;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using IdGen;
+using Npgsql;
 
 namespace Example.Brook
 {
@@ -104,6 +106,7 @@ namespace Example.Brook
                 {
                     db.Execute(ConvertSeparate(DeleteAccount, dt), new[] {db.Parameter("@id", 3, DbType.Int32)});
                 }
+                db.Dispose();
             }
         }
 
@@ -131,13 +134,14 @@ namespace Example.Brook
                 RunCmd("sqlite", count);
                 RunCmd("mysql", count);
                 RunCmd("posql", count);
-                //                    RunCmd("mssql");
+                RunCmd("mssql", count);
 
             }
             catch (Exception ex)
             {
                 Log.Error(ex, ex.Message);
             }
+
             Nami.Delay(100).Milliseconds().Do(() => { Run(++count); });
         }
 
@@ -151,7 +155,7 @@ namespace Example.Brook
             }
 #endif
             Run(0);
-            
+
             ConsoleKeyInfo cki;
             Console.TreatControlCAsInput = true;
             Console.WriteLine("Press the CTRL + Q key to quit: \n");
