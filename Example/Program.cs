@@ -15,10 +15,10 @@ namespace Example.Brook
         private static readonly IdGenerator Generator = new IdGenerator(0);
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        private const string AllAccount = "SELECT {id},{name},{email} FROM {account} ORDER BY {id} DESC LIMIT 10;";
+        private const string AllAccount = "SELECT TOP 10 {id},{name},{email} FROM {account} ORDER BY {id} DESC LIMIT 10;";
 
         private const string AllAccountForObject =
-            "SELECT {id} AS {Id},{name} AS {Name},{email} AS {Email} FROM {account} ORDER BY {id} DESC LIMIT 10;";
+            "SELECT TOP 10 {id} AS {Id},{name} AS {Name},{email} AS {Email} FROM {account} ORDER BY {id} DESC LIMIT 10;";
 
         private const string AccountFindByName =
             "SELECT {id} AS {Id},{name} AS {Name},{email} AS {Email} FROM {account} where {name} = @name;";
@@ -115,17 +115,19 @@ namespace Example.Brook
             switch (dt)
             {
                 case DatabaseType.SQLServer:
-                    return sql.Replace("{", "[").Replace("}", "]");
+                    return sql.Replace("{", "[").Replace("}", "]").Replace("LIMIT 10", "");
                 case DatabaseType.PostgreSQL:
-                    return sql.Replace("{", "\"").Replace("}", "\"");
+                    return sql.Replace("{", "\"").Replace("}", "\"").Replace("TOP 10", "");
                 case DatabaseType.MySQL:
-                    return sql.Replace("{", "`").Replace("}", "`");
+                    return sql.Replace("{", "`").Replace("}", "`").Replace("TOP 10", "");
                 case DatabaseType.SQLite:
                 default:
-                    return sql.Replace("{", "").Replace("}", "");
+                    return sql.Replace("{", "").Replace("}", "").Replace("TOP 10", "");
 
             }
         }
+
+       
 
         private static void Run(int count)
         {
@@ -141,8 +143,7 @@ namespace Example.Brook
             {
                 Log.Error(ex, ex.Message);
             }
-
-            Nami.Delay(100).Milliseconds().Do(() => { Run(++count); });
+            Nami.Delay(1000).Milliseconds().Do(() => { Run(++count); });
         }
 
         private static void Main(string[] args)
