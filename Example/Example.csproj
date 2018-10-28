@@ -3,8 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461;netcoreapp2.1</TargetFrameworks>
-    <RootNamespace>Example.Brook</RootNamespace>
-    <AssemblyName>Example.Brook</AssemblyName>
+ 
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +12,6 @@
     <PackageReference Include="MySql.Data" Version="8.0.13" />
     <PackageReference Include="NLog.Config" Version="4.5.10" />
     <PackageReference Include="Npgsql" Version="4.0.3" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.109.2" />
   </ItemGroup>
@@ -30,12 +28,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="App_Data\sqlite.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="C:\Users\jIAn\.nuget\packages\nlog.config\4.5.10\contentFiles\any\any\NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="C:\Users\user\.nuget\packages\nlog.config\4.5.10\contentFiles\any\any\NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="NLog.config">

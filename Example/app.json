@@ -10,7 +10,7 @@
   "Database": [
     {
       "Name": "mysql",
-      "Connection": "server=192.168.1.138;port=3306;uid=pi;pwd=1qaz@WSX;database=test;SslMode=None;",
+      "Connection": "server=192.168.1.138;port=3306;uid=pi;pwd=1qaz@WSX;DataBase=test;charset=utf8;",
       "ProviderName": "MySql.Data.MySqlClient",
       "CommandTimeout": 5
     },

@@ -186,24 +186,25 @@ namespace jIAnSoft.Brook
         /// <returns>A <see cref="T:System.Data.Common.DbCommand" /> object.</returns>
         private DbCommand CreateCommand(int timeout, CommandType type, string sql, DbParameter[] parameters)
         {
-            Conn = CreateConnection();
             var cmd = _provider.CreateCommand();
             if (cmd == null)
             {
-                throw new SqlException($"Cannot create a sql command ({DbConfig.Name}.");
+                throw new SqlException($"Cannot create a sql command ({DbConfig.Name}).");
             }
 
+            Conn = CreateConnection();
             cmd.CommandTimeout = timeout;
             cmd.CommandText = sql;
             cmd.CommandType = type;
             cmd.Connection = Conn;
-          
+
             if (null != parameters)
             {
                 cmd.Parameters.AddRange(parameters);
             }
 
             Conn.Open();
+
             return cmd;
         }
 

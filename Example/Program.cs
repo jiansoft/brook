@@ -3,12 +3,10 @@ using jIAnSoft.Nami.Clockwork;
 using NLog;
 using System;
 using System.Data;
-using System.Data.Common;
 using System.IO;
 using IdGen;
-using Npgsql;
 
-namespace Example.Brook
+namespace Example
 {
     internal static class Program
     {
@@ -43,7 +41,6 @@ namespace Example.Brook
                 case "mysql":
                     dt = DatabaseType.MySQL;
                     break;
-                case "sqlite":
                 default:
                     dt = DatabaseType.SQLite;
                     const string dbPath = @".\brook.sqlite";
@@ -63,51 +60,76 @@ namespace Example.Brook
             var providerNme = Enum.GetName(typeof(DatabaseType), dt);
             Log.Info($"{DateTime.Now:HH:mm:ss.fff} From {providerNme} {count}");
 
-
-            using (var db = jIAnSoft.Brook.Mapper.Brook.Load(dbName))
+            try
             {
-                var query = db.Query<Account>(ConvertSeparate(AllAccountForObject, dt));
-                var table = db.Table(ConvertSeparate(AllAccount, dt));
-                var dataSet = db.DataSet(ConvertSeparate(AccountFindByName, dt),
-                    new[] {db.Parameter("@name", "許功蓋", DbType.String)});
-                var account = db.First<Account>(ConvertSeparate(AccountFindById, dt),
-                    new[] {db.Parameter("@id", 1, DbType.Int32)});
-                db.Execute(ConvertSeparate(InsertAccount, dt),
-                    new[]
+                using (var db = jIAnSoft.Brook.Mapper.Brook.Load(dbName))
+                {
+                    var query = db.Query<Account>(ConvertSeparate(AllAccountForObject, dt));
+                    var table = db.Table(ConvertSeparate(AllAccount, dt));
+                    var dataSet = db.DataSet(ConvertSeparate(AccountFindByName, dt),
+                        new[] {db.Parameter("@name", "許功蓋", DbType.String)});
+                    var account = db.First<Account>(ConvertSeparate(AccountFindById, dt),
+                        new[] {db.Parameter("@id", 1, DbType.Int32)});
+                    db.Execute(ConvertSeparate(InsertAccount, dt),
+                        new[]
+                        {
+                            db.Parameter("@name", $"{Generator.CreateId()}", DbType.String),
+                            db.Parameter("@email", $"{Generator.CreateId()}@{providerNme}.com", DbType.String)
+                        });
+
+                    foreach (var row in query)
                     {
-                        db.Parameter("@name", $"{Generator.CreateId()}", DbType.String),
-                        db.Parameter("@email", $"{Generator.CreateId()}@{providerNme}.com", DbType.String)
-                    });
+                        Log.Info($"{providerNme} Query    {row.Id} {row.Name} {row.Email}");
+                    }
 
-                foreach (var row in query)
-                {
-                    Log.Info($"{providerNme} Query    {row.Id} {row.Name} {row.Email}");
-                }
+                    foreach (DataRow row in table.Rows)
+                    {
+                        Log.Info($"{providerNme} table    {row[0]} {row[1]} {row[2]}");
+                    }
 
-                foreach (DataRow row in table.Rows)
-                {
-                    Log.Info($"{providerNme} table    {row[0]} {row[1]} {row[2]}");
-                }
+                    foreach (DataRow row in dataSet.Tables[0].Rows)
+                    {
+                        if (row != null)
+                        {
+                            Log.Info($"{providerNme} dataSet  {row[0]} {row[1]} {row[2]}");
+                        }
+                    }
 
-                foreach (var row in dataSet.Tables[0].AsEnumerable())
-                {
-                    Log.Info($"{providerNme} dataSet    {row[0]} {row[1]} {row[2]}");
-                }
+                    if (null != account)
+                    {
+                        Log.Info($"{providerNme} First    Id:{account.Id} Email:{account.Email} Name:{account.Name}");
+                    }
 
-                Log.Info($"{providerNme} First    Id:{account.Id} Email:{account.Email} Name:{account.Name}");
-                if (dt == DatabaseType.MySQL)
-                {
-                    var one = db.One<int>(CommandType.StoredProcedure, "test.ReturnValue",
-                        new[] {db.Parameter("@param1", DateTime.Now.Ticks / 1000 % 10000000, DbType.Int32)});
-                    Log.Info($"{providerNme} One is {one}");
-                }
+                    if (dt == DatabaseType.MySQL)
+                    {
+                        var one = db.One<int>(CommandType.StoredProcedure, "test.ReturnValue",
+                            new[] {db.Parameter("@param1", DateTime.Now.Ticks / 1000 % 10000000, DbType.Int32)});
+                        Log.Info($"{providerNme} One is {one}");
+                    }
 
-                if (count % 1000 == 0)
-                {
-                    db.Execute(ConvertSeparate(DeleteAccount, dt), new[] {db.Parameter("@id", 3, DbType.Int32)});
+                    if (count % 1000 == 0)
+                    {
+                        db.Execute(ConvertSeparate(DeleteAccount, dt), new[] {db.Parameter("@id", 3, DbType.Int32)});
+                    }
                 }
-                db.Dispose();
             }
+            catch (Exception e)
+            {
+                Log.Error(e, e.Message);
+            }
+
+            Nami.Delay(0).Milliseconds().Do(() =>
+            {
+                try
+                {
+                    RunCmd(dbName, ++count);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, e.Message);
+                }
+            });
+
         }
 
         private static string ConvertSeparate(string sql, DatabaseType dt = DatabaseType.SQLite)
@@ -120,30 +142,36 @@ namespace Example.Brook
                     return sql.Replace("{", "\"").Replace("}", "\"").Replace("TOP 10", "");
                 case DatabaseType.MySQL:
                     return sql.Replace("{", "`").Replace("}", "`").Replace("TOP 10", "");
-                case DatabaseType.SQLite:
                 default:
                     return sql.Replace("{", "").Replace("}", "").Replace("TOP 10", "");
 
             }
         }
 
-       
-
         private static void Run(int count)
         {
-            try
-            {
-                RunCmd("sqlite", count);
-                RunCmd("mysql", count);
-                RunCmd("posql", count);
-                RunCmd("mssql", count);
 
-            }
-            catch (Exception ex)
+            var sqlType = new []
             {
-                Log.Error(ex, ex.Message);
+                "sqlite",
+                "mssql",
+                "mysql",
+                "posql"
+            };
+            foreach (var s in sqlType)
+            {
+                Nami.Delay(100).Milliseconds().Do(() =>
+                {
+                    try
+                    {
+                        RunCmd(s, count);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, e.Message);
+                    }
+                });
             }
-            Nami.Delay(1000).Milliseconds().Do(() => { Run(++count); });
         }
 
         private static void Main(string[] args)
@@ -155,8 +183,11 @@ namespace Example.Brook
                 File.Delete("Example.dll.config");
             }
 #endif
-            Run(0);
-
+            
+            Nami.Delay(100).Milliseconds().Do(() =>
+            {
+                Run(0);
+            });
             ConsoleKeyInfo cki;
             Console.TreatControlCAsInput = true;
             Console.WriteLine("Press the CTRL + Q key to quit: \n");
