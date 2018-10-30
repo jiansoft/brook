@@ -141,7 +141,7 @@ namespace jIAnSoft.Brook
         /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbConnection" /> class.
         /// </summary>
         /// <returns>A new instance of <see cref="T:System.Data.Common.DbConnection" />.</returns>
-        private DbConnection CreateConnection()
+        internal DbConnection CreateConnection()
         {
             var con = _provider.CreateConnection();
             if (con == null)

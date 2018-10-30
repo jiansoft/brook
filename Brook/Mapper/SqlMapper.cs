@@ -24,11 +24,16 @@ namespace jIAnSoft.Brook.Mapper
         }
 
         /// <summary>
-        /// Returns current instance of DbConnection
+        /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbConnection" /> class.
         /// </summary>
         /// <returns></returns>
-        public DbConnection CurrentConnection => _db.Conn;
-        
+        public DbConnection NewConnection()
+        {
+            var conn = _db.CreateConnection();
+            conn.Open();
+            return conn;
+        }
+
         /// <summary>
         ///  Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbParameter" /> class.
         /// </summary>
