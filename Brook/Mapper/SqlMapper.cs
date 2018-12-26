@@ -68,7 +68,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <param name="dbType"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        public DbParameter Parameter(string name, object value, DbType dbType, int size = 0)
+        public DbParameter Parameter(string name, object value, DbType dbType = DbType.String, int size = 0)
         {
             return Parameter(name, dbType, size, value, ParameterDirection.Input);
         }
