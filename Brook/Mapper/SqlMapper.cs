@@ -335,6 +335,45 @@ namespace jIAnSoft.Brook.Mapper
                 return db.Execute(timeout, commandType, sql, parameters);
             }
         }
+        
+        /// <summary>
+        /// Executes a SQL statement against the connection and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql">SQL 指令</param>
+        /// <param name="parameters">SQL 指令參數</param>
+        /// <returns></returns>
+        public int[] Execute(string sql, List<DbParameter[]> parameters)
+        {
+            return Execute(CommandType.Text, sql, parameters);
+        }
+
+        /// <summary>
+        ///  Executes a SQL statement against the connection and returns the number of rows affected.
+        /// </summary>
+        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        public int[] Execute(CommandType commandType, string sql, List<DbParameter[]> parameters)
+        {
+            return Execute(_db.DbConfig.CommandTimeout, commandType, sql, parameters);
+        }
+
+        /// <summary>
+        ///  Executes a SQL statement against the connection and returns the number of rows affected.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        public int[] Execute(int timeout, CommandType commandType, string sql, List<DbParameter[]> parameters)
+        {
+            using (var db = new DbProvider(_db.DbConfig))
+            {
+                return db.Execute(timeout, commandType, sql, parameters);
+            }
+        }
 
         /// <summary>
         /// Execute SQL and return first row and column as a <see cref="T"/>.

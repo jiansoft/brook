@@ -334,9 +334,11 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public int Execute(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        internal int Execute(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
-            try
+            var r = Execute(timeout, type, sql, new List<DbParameter[]> {parameters});
+            return r.Length > 0 ? r[0] : 0;
+            /*try
             {
                 using (var cmd = CreateCommand(timeout, type, sql, parameters))
                 {
@@ -347,6 +349,49 @@ namespace jIAnSoft.Brook
             catch (Exception sqlEx)
             {
                 throw SqlException(sqlEx, sql, parameters);
+            }
+            finally
+            {
+                QueryCompleted();
+            }*/
+        }
+
+        /// <summary>
+        ///  Executes a SQL statement against the connection and returns the number of rows affected.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="type">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        internal int[] Execute(int timeout, CommandType type, string sql, List<DbParameter[]> parameters)
+        {
+            var returnValue = new int[parameters.Count];
+            DbParameter[] currentDbParameter = null;
+            try
+            {
+                using (var cmd = CreateCommand(timeout, type, sql, null))
+                {
+                    var tmp = parameters.ToArray();
+                    for (var index = 0; index < tmp.Length; index++)
+                    {
+                        cmd.Parameters.Clear();
+                        if (null != tmp[index])
+                        {
+                            cmd.Parameters.AddRange(tmp[index]);
+                            currentDbParameter = tmp[index];
+                        }
+
+                        var r = cmd.ExecuteNonQuery();
+                        returnValue[index] = r;
+                    }
+
+                    return returnValue;
+                }
+            }
+            catch (Exception sqlEx)
+            {
+                throw SqlException(sqlEx, sql, currentDbParameter);
             }
             finally
             {
@@ -362,7 +407,7 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public T One<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        internal T One<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             try
             {
@@ -395,7 +440,7 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public DataTable Table(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        internal DataTable Table(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             try
             {
@@ -430,7 +475,7 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        public DataSet DataSet(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        internal DataSet DataSet(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             try
             {
@@ -456,45 +501,8 @@ namespace jIAnSoft.Brook
                 QueryCompleted();
             }
         }
-
-        /*
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="batchSize"></param>
-        public void Bulk(DataTable table, int batchSize = 2500)
-        {
-            using (var bulk = new SqlBulkCopy(ConnectionSource))
-            {
-                bulk.BatchSize = batchSize;
-                bulk.BulkCopyTimeout = 0;
-                bulk.DestinationTableName = $"[dbo].[{table.TableName}]";
-                foreach (DataColumn column in table.Columns)
-                {
-                    bulk.ColumnMappings.Add(column.ColumnName, column.ColumnName);
-                }
-                try
-                {
-                    // Write from the source to the destination.
-                    bulk.WriteToServer(table);
-                }
-                catch (Exception sqlEx)
-                {
-                    throw new SqlException(
-                        string.Format(
-                            new CultureInfo(Section.Get.Common.Culture.Name),
-                            "{0} Source = {1}\n Table = {2}\n",
-                            sqlEx.Message,
-                            ConnStringSetting.Name,
-                            table.TableName
-                        ),
-                        sqlEx);
-                }
-            }
-        }*/
-
-        private SqlException SqlException(Exception sqlEx, string sql, DbParameter[] parameters = null)
+        
+        private SqlException SqlException(Exception sqlEx, string sql, IReadOnlyCollection<DbParameter> parameters = null)
         {
             var errStr = $"Source = {DbConfig.Name}\nCmd = {sql}\nParam = {PrintDbParameters(parameters)}\n{sqlEx.Message}\n";
             return new SqlException(errStr, sqlEx);
