@@ -1,10 +1,11 @@
-﻿using jIAnSoft.Brook;
+﻿using IdGen;
+using jIAnSoft.Brook;
 using jIAnSoft.Nami.Clockwork;
 using NLog;
 using System;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
-using IdGen;
 
 namespace Example
 {
@@ -13,15 +14,15 @@ namespace Example
         private static readonly IdGenerator Generator = new IdGenerator(0);
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        private const string AllAccount = "SELECT TOP 10 {id},{name},{email} FROM {account} ORDER BY {id} DESC LIMIT 10;";
+        private const string Account = "SELECT TOP 10 {id},{name},{email} FROM {account} ORDER BY {id} DESC LIMIT 10;";
 
-        private const string AllAccountForObject =
+        private const string ForObject =
             "SELECT TOP 10 {id} AS {Id},{name} AS {Name},{email} AS {Email} FROM {account} ORDER BY {id} DESC LIMIT 10;";
 
-        private const string AccountFindByName =
+        private const string FindByName =
             "SELECT {id} AS {Id},{name} AS {Name},{email} AS {Email} FROM {account} where {name} = @name;";
 
-        private const string AccountFindById =
+        private const string FindById =
             "SELECT {id} AS {Id},{name} AS {Name},{email} AS {Email} FROM {account} where {id} = @id;";
 
         private const string InsertAccount = "insert into {account} ({name},{email})values(@name, @email);";
@@ -29,6 +30,9 @@ namespace Example
 
         private static void RunCmd(string dbName, int count)
         {
+            var sw = new Stopwatch();
+            sw.Start();
+
             DatabaseType dt;
             switch (dbName)
             {
@@ -58,53 +62,54 @@ namespace Example
             }
 
             var providerNme = Enum.GetName(typeof(DatabaseType), dt);
-            Log.Info($"{DateTime.Now:HH:mm:ss.fff} From {providerNme} {count}");
+            // Log.Info($"From {providerNme} {count}");
 
             try
             {
                 using (var db = jIAnSoft.Brook.Mapper.Brook.Load(dbName))
                 {
-                    var query = db.Query<Account>(ConvertSeparate(AllAccountForObject, dt));
-                    var table = db.Table(ConvertSeparate(AllAccount, dt));
-                    var dataSet = db.DataSet(ConvertSeparate(AccountFindByName, dt),
-                        new[] {db.Parameter("@name", "許功蓋", DbType.String)});
-                    var account = db.First<Account>(ConvertSeparate(AccountFindById, dt),
+                    var query = db.Query<Account>(ConvertSeparate(ForObject, dt));
+                    var table = db.Table(ConvertSeparate(Account, dt));
+                    var dataSet = db.DataSet(ConvertSeparate(FindByName, dt), new[] {db.Parameter("@name", "許功蓋")});
+                    var account = db.First<Account>(ConvertSeparate(FindById, dt),
                         new[] {db.Parameter("@id", 1, DbType.Int32)});
                     db.Execute(ConvertSeparate(InsertAccount, dt),
                         new[]
                         {
-                            db.Parameter("@name", $"{Generator.CreateId()}", DbType.String),
-                            db.Parameter("@email", $"{Generator.CreateId()}@{providerNme}.com", DbType.String)
+                            db.Parameter("@name", $"{Generator.CreateId()}"),
+                            db.Parameter("@email", $"{Generator.CreateId()}@{providerNme}.com")
                         });
 
                     foreach (var row in query)
                     {
-                        Log.Info($"{providerNme} Query    {row.Id} {row.Name} {row.Email}");
+                        //Log.Info($"{count} {providerNme} Query  {row.Id} {row.Name} {row.Email}");
                     }
 
                     foreach (DataRow row in table.Rows)
                     {
-                        Log.Info($"{providerNme} table    {row[0]} {row[1]} {row[2]}");
+                        //Log.Info($"{count} {providerNme} table  {row[0]} {row[1]} {row[2]}");
                     }
 
                     foreach (DataRow row in dataSet.Tables[0].Rows)
                     {
                         if (row != null)
                         {
-                            Log.Info($"{providerNme} dataSet  {row[0]} {row[1]} {row[2]}");
+                            //Log.Info($"{count} {providerNme} sdataSet    {row[0]} {row[1]} {row[2]}");
                         }
                     }
 
                     if (null != account)
                     {
-                        Log.Info($"{providerNme} First    Id:{account.Id} Email:{account.Email} Name:{account.Name}");
+                        Log.Info($"{count} {providerNme} First  Id:{account.Id} Email:{account.Email} Name:{account.Name}");
                     }
 
                     if (dt == DatabaseType.MySQL)
                     {
-                        var one = db.One<int>(CommandType.StoredProcedure, "test.ReturnValue",
+                        var one = db.One<int>(
+                            CommandType.StoredProcedure,
+                            "test.ReturnValue",
                             new[] {db.Parameter("@param1", DateTime.Now.Ticks / 1000 % 10000000, DbType.Int32)});
-                        Log.Info($"{providerNme} One is {one}");
+                        //Log.Info($"{providerNme} One is {one}");
                     }
 
                     if (count % 1000 == 0)
@@ -118,18 +123,15 @@ namespace Example
                 Log.Error(e, e.Message);
             }
 
-            Nami.Delay(0).Milliseconds().Do(() =>
-            {
-                try
-                {
-                    RunCmd(dbName, ++count);
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e, e.Message);
-                }
-            });
+            sw.Stop();
+            var rand = new Random(Guid.NewGuid().GetHashCode());
+            var nextTime = rand.Next(100, 1000);
 
+            /*var diffTicks = (DateTime.Now.Ticks - previousDate.Ticks) / TimeSpan.TicksPerMillisecond;
+            Log.Info(
+                $"{count} {sw.ElapsedMilliseconds} ms {providerNme} nextTime:{nextTime} previousDelay:{previousDelay} diffTicks:{diffTicks}");
+            var newPreviousDate = DateTime.Now;*/
+            Nami.Delay(nextTime).Do(() => { RunCmd(dbName, ++count); });
         }
 
         private static string ConvertSeparate(string sql, DatabaseType dt = DatabaseType.SQLite)
@@ -151,16 +153,17 @@ namespace Example
         private static void Run(int count)
         {
 
-            var sqlType = new []
+            var sqlType = new[]
             {
-                "sqlite",
-                "mssql",
                 "mysql",
-                "posql"
+                "posql",
+                "sqlite",
+                /* "mssql"*/
+
             };
             foreach (var s in sqlType)
             {
-                Nami.Delay(100).Milliseconds().Do(() =>
+                Nami.Delay(100).Do(() =>
                 {
                     try
                     {
@@ -176,7 +179,7 @@ namespace Example
 
         private static void Main(string[] args)
         {
-#if NETCOREAPP2_1
+#if NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 
             if (File.Exists("Example.dll.config"))
             {
                 //There need to delete .net framework config file if we run the program as .net core app
@@ -184,10 +187,13 @@ namespace Example
             }
 #endif
             
-            Nami.Delay(100).Milliseconds().Do(() =>
+            Nami.Delay(0).Do(() =>
             {
                 Run(0);
+                Run(0);
+                Run(0);
             });
+
             ConsoleKeyInfo cki;
             Console.TreatControlCAsInput = true;
             Console.WriteLine("Press the CTRL + Q key to quit: \n");

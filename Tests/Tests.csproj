@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>       
+        <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="IdGen" Version="2.0.3" />
+        <PackageReference Include="MySql.Data" Version="8.0.14" />
+        <PackageReference Include="Npgsql" Version="4.0.4" />
+        <PackageReference Include="nunit" Version="3.11.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+        <PackageReference Include="System.Data.SQLite" Version="1.0.109.2" />
+    </ItemGroup>
+ <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
+  
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Brook\Brook.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Update="App_Data\mssql.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="App_Data\mysql.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="App_Data\postgresql.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="App_Data\sqlite.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

@@ -23,24 +23,24 @@ namespace jIAnSoft.Brook
         /// <summary>
         /// ConnectionStringSettings
         /// </summary>
-        private ConnectionStringSettings _connStringSetting;
+        private ConnectionStringSettings _connSetting;
 
         /// <summary>
         /// DatabaseConfiguration
         /// </summary>
         internal DatabaseConfiguration DbConfig;
 
-        /// <summary>
+        /*/// <summary>
         /// Connection resource
         /// </summary>
-        internal DbConnection Conn { get; set; }
+        internal DbConnection Conn { get; set; }*/
 
         /// <summary>
         /// 目前連線的資料庫位置
         /// </summary>
-        public string ConnectionSource => _connStringSetting.ConnectionString;
+        public string ConnectionSource => _connSetting.ConnectionString;
 
-        /// <inheritdoc />
+        /*
         /// <summary>
         /// </summary>
         /// <param name="host"></param>
@@ -57,7 +57,7 @@ namespace jIAnSoft.Brook
                 Name = dbName
             })
         {
-        }
+        }*/
 
         /// <inheritdoc />
         /// <summary>
@@ -77,14 +77,14 @@ namespace jIAnSoft.Brook
         /// <inheritdoc />
         /// <summary>
         /// </summary>
-        /// <param name="connStringStringSettings"></param>
-        private DbProvider(ConnectionStringSettings connStringStringSettings)
+        /// <param name="connSettings"></param>
+        private DbProvider(ConnectionStringSettings connSettings)
         {
-            _connStringSetting = connStringStringSettings;
+            _connSetting = connSettings;
 #if NET461
-            _provider = DbProviderFactories.GetFactory(_connStringSetting.ProviderName);
+            _provider = DbProviderFactories.GetFactory(_connSetting.ProviderName);
 #elif NETSTANDARD2_0
-            _provider = DbProviderFactories.GetFactory(_connStringSetting.ProviderName);
+            _provider = DbProviderFactories.GetFactory(_connSetting.ProviderName);
 #endif
         }
 
@@ -124,19 +124,7 @@ namespace jIAnSoft.Brook
 
             return instance;
         }
-
-
-        /// <summary>
-        /// Close connection
-        /// </summary>
-        private void QueryCompleted()
-        {
-            if (Conn.State == ConnectionState.Open)
-            {
-                Conn.Close();
-            }
-        }
-
+        
         /// <summary>
         /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbConnection" /> class.
         /// </summary>
@@ -147,10 +135,10 @@ namespace jIAnSoft.Brook
             if (con == null)
             {
                 throw new SqlException(
-                    $"Cannot connect to specified sql server({_connStringSetting.Name} => {_connStringSetting.ConnectionString}).");
+                    $"Can`t connect to specified sql server({_connSetting.Name}. Please check the connection string.");
             }
 
-            con.ConnectionString = _connStringSetting.ConnectionString;
+            con.ConnectionString = _connSetting.ConnectionString;
             return con;
         }
 
@@ -161,16 +149,18 @@ namespace jIAnSoft.Brook
         private DbDataAdapter CreateDataAdapter()
         {
             var adapter = _provider.CreateDataAdapter();
-            if (adapter == null)
+            if (adapter != null)
             {
-                if (string.Equals("MySql.Data.MySqlClient", DbConfig.ProviderName, StringComparison.Ordinal))
-                {
-                    adapter =
-                        Assembly.Load("MySql.Data")
-                            .CreateInstance("MySql.Data.MySqlClient.MySqlDataAdapter") as DbDataAdapter;
-                }
+                return adapter;
             }
 
+            if (!string.Equals("MySql.Data.MySqlClient", DbConfig.ProviderName, StringComparison.Ordinal))
+            {
+                throw new SqlException(
+                    "DbProviderFactory can't create a new instance of the provider's DataAdapter class.");
+            }
+
+            adapter = Assembly.Load("MySql.Data").CreateInstance("MySql.Data.MySqlClient.MySqlDataAdapter") as DbDataAdapter;
             if (adapter == null)
             {
                 throw new SqlException(
@@ -191,20 +181,18 @@ namespace jIAnSoft.Brook
             {
                 throw new SqlException($"Cannot create a sql command ({DbConfig.Name}).");
             }
-
-            Conn = CreateConnection();
+            
             cmd.CommandTimeout = timeout;
             cmd.CommandText = sql;
             cmd.CommandType = type;
-            cmd.Connection = Conn;
+            cmd.Connection = CreateConnection(); 
 
             if (null != parameters)
             {
                 cmd.Parameters.AddRange(parameters);
             }
 
-            Conn.Open();
-
+            cmd.Connection.Open();
             return cmd;
         }
 
@@ -252,8 +240,7 @@ namespace jIAnSoft.Brook
 
                     reader.Close();
                 }
-
-                QueryCompleted();
+                cmd.Connection.Close();
             }
 
             return instance;
@@ -282,6 +269,7 @@ namespace jIAnSoft.Brook
 
                     reader.Close();
                 }
+                cmd.Connection.Close();
             }
 
             return re;
@@ -319,10 +307,6 @@ namespace jIAnSoft.Brook
             catch (Exception sqlEx)
             {
                 throw SqlException(sqlEx, sql, parameters);
-            }
-            finally
-            {
-                QueryCompleted();
             }
         }
 
@@ -386,16 +370,13 @@ namespace jIAnSoft.Brook
                         returnValue[index] = r;
                     }
 
+                    cmd.Connection.Close();
                     return returnValue;
                 }
             }
             catch (Exception sqlEx)
             {
                 throw SqlException(sqlEx, sql, currentDbParameter);
-            }
-            finally
-            {
-                QueryCompleted();
             }
         }
 
@@ -419,16 +400,13 @@ namespace jIAnSoft.Brook
                         return default(T);
                     }
 
+                    cmd.Connection.Close();
                     return (T) Conversion.ConvertTo<T>(result);
                 }
             }
             catch (Exception sqlEx)
             {
                 throw SqlException(sqlEx, sql, parameters);
-            }
-            finally
-            {
-                QueryCompleted();
             }
         }
 
@@ -452,6 +430,7 @@ namespace jIAnSoft.Brook
                         {
                             adapter.SelectCommand = cmd;
                             adapter.Fill(t);
+                            cmd.Connection.Close();
                             return t;
                         }
                     }
@@ -460,10 +439,6 @@ namespace jIAnSoft.Brook
             catch (Exception sqlEx)
             {
                 throw SqlException(sqlEx, sql, parameters);
-            }
-            finally
-            {
-                QueryCompleted();
             }
         }
 
@@ -487,6 +462,7 @@ namespace jIAnSoft.Brook
                         {
                             adapter.SelectCommand = cmd;
                             adapter.Fill(ds);
+                            cmd.Connection.Close();
                             return ds;
                         }
                     }
@@ -496,31 +472,25 @@ namespace jIAnSoft.Brook
             {
                 throw SqlException(sqlEx, sql, parameters);
             }
-            finally
-            {
-                QueryCompleted();
-            }
         }
-        
-        private SqlException SqlException(Exception sqlEx, string sql, IReadOnlyCollection<DbParameter> parameters = null)
+
+        private SqlException SqlException(Exception sqlEx, string sql,
+            IReadOnlyCollection<DbParameter> parameters = null)
         {
-            var errStr = $"Source = {DbConfig.Name}\nCmd = {sql}\nParam = {PrintDbParameters(parameters)}\n{sqlEx.Message}\n";
+            var errStr =
+                $"Source = {DbConfig.Name}\nCmd = {sql}\nParam = {PrintDbParameters(parameters)}\n{sqlEx.Message}\n";
             return new SqlException(errStr, sqlEx);
         }
 
         private void Dispose(bool disposing)
         {
-            if (!disposing || _disposed) return;
-
-            if (null != Conn)
+            if (!disposing || _disposed)
             {
-                QueryCompleted();
-                Conn.Dispose();
-                Conn = null;
+                return;
             }
 
             _provider = null;
-            _connStringSetting = null;
+            _connSetting = null;
             DbConfig = null;
             _disposed = true;
         }

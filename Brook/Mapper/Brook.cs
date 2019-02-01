@@ -8,9 +8,11 @@ namespace jIAnSoft.Brook.Mapper
         {
             return new SqlMapper(db);
         }
-
-        public static SqlMapper LoadFromConnectionString(string dbConnectionString,
-            DatabaseType dt = DatabaseType.MySQL,int timeout = 5)
+        
+        public static SqlMapper LoadFromConnectionString(
+            string dbConnectionString,
+            DatabaseType dt = DatabaseType.MySQL, 
+            int timeout = 5)
         {
             var dbConfig = new DatabaseConfiguration
             {

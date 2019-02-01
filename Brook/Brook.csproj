@@ -4,14 +4,14 @@
     <PackageId>jIAnSoft.Brook</PackageId>
     <PackageTags>micro sql helper</PackageTags>
     <Title>Brook</Title>
-    <Description>A high performance micro sql helper supporting SQL Server、MySQL、PostgreSQL</Description>
+    <Description>A high performance micro sql helper supporting SQL Server、MySQL、PostgreSQL、SQLite</Description>
     <Authors>Eddie</Authors>
    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
    <RootNamespace>jIAnSoft.Brook</RootNamespace>
-   <AssemblyVersion>18.12.28</AssemblyVersion>
-   <FileVersion>18.12.28</FileVersion>
-   <Version>18.12.28</Version>
+   <AssemblyVersion>19.2.1</AssemblyVersion>
+   <FileVersion>19.2.1</FileVersion>
+   <Version>19.2.1</Version>
    <PackageLicenseUrl>https://github.com/jiansoft/brook/blob/master/LICENSE</PackageLicenseUrl>
    <Copyright>Copyright © jIAnSoft 2018 ~ DateTime.Now()</Copyright>
    <PackageProjectUrl>https://github.com/jiansoft/brook</PackageProjectUrl>
@@ -64,11 +64,11 @@
     <PackageReference Include="System.Data.Common" Version="4.3.0" />
   </ItemGroup>  
    <ItemGroup>
-     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
-     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.1.1" />
-     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.1.1" />
-     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.1.1" />
-     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
+     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.2.0" />
+     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.2.0" />
+     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.2.0" />
+     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.2.0" />
+     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
      <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
    </ItemGroup>  
 </Project>

@@ -1,9 +1,8 @@
-﻿using System;
+﻿#if NETSTANDARD2_0
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Reflection;
-
-#if NETSTANDARD2_0
 namespace jIAnSoft.Brook.Utility
 {
     public static class DbProviderFactories

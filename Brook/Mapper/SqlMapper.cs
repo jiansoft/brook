@@ -12,6 +12,8 @@ namespace jIAnSoft.Brook.Mapper
 
         private DbProvider _db;
 
+        public string ConnectionSource => _db.ConnectionSource;
+
         internal SqlMapper(string dbName) : this(Section.Get.Database.Which.ContainsKey(dbName)
             ? Section.Get.Database.Which[dbName]
             : new DatabaseConfiguration {Name = dbName})
@@ -416,15 +418,19 @@ namespace jIAnSoft.Brook.Mapper
 
         private void Dispose(bool disposing)
         {
-            if (!disposing || _disposed) return;
-
-            if (null != _db)
+            if (!disposing || _disposed)
             {
-                _db.Dispose();
-                _db = null;
+                return;
             }
 
             _disposed = true;
+
+            if (null == _db)
+            {
+                return;
+            }
+            _db.Dispose();
+            _db = null;
         }
 
         public void Dispose()
