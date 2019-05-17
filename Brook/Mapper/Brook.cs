@@ -1,4 +1,5 @@
-﻿using jIAnSoft.Brook.Configuration;
+﻿using System;
+using jIAnSoft.Brook.Configuration;
 
 namespace jIAnSoft.Brook.Mapper
 {
@@ -20,6 +21,7 @@ namespace jIAnSoft.Brook.Mapper
                 Name = dt.ToString(),
                 CommandTimeout = timeout
             };
+
             switch (dt)
             {
                 case DatabaseType.SQLServer:
@@ -34,6 +36,8 @@ namespace jIAnSoft.Brook.Mapper
                 case DatabaseType.SQLite:
                     dbConfig.ProviderName = "System.Data.SQLite";
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(dt), dt, null);
             }
 
             return new SqlMapper(dbConfig);

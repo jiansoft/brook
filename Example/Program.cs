@@ -37,6 +37,7 @@ namespace Example
             switch (dbName)
             {
                 case "mssql":
+                case "sqlserver":
                     dt = DatabaseType.SQLServer;
                     break;
                 case "posql":
@@ -100,7 +101,8 @@ namespace Example
 
                     if (null != account)
                     {
-                        Log.Info($"{count} {providerNme} First  Id:{account.Id} Email:{account.Email} Name:{account.Name}");
+                        Log.Info(
+                            $"{count} {providerNme} First  Id:{account.Id} Email:{account.Email} Name:{account.Name}");
                     }
 
                     if (dt == DatabaseType.MySQL)
@@ -146,20 +148,18 @@ namespace Example
                     return sql.Replace("{", "`").Replace("}", "`").Replace("TOP 10", "");
                 default:
                     return sql.Replace("{", "").Replace("}", "").Replace("TOP 10", "");
-
             }
         }
 
         private static void Run(int count)
         {
-
             var sqlType = new[]
             {
                 "mysql",
                 "posql",
                 "sqlite",
-                /* "mssql"*/
-
+                "mssql",
+                "sqlserver"
             };
             foreach (var s in sqlType)
             {
@@ -179,14 +179,14 @@ namespace Example
 
         private static void Main(string[] args)
         {
-#if NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 
+#if NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2
             if (File.Exists("Example.dll.config"))
             {
                 //There need to delete .net framework config file if we run the program as .net core app
                 File.Delete("Example.dll.config");
             }
 #endif
-            
+
             Nami.Delay(0).Do(() =>
             {
                 Run(0);
@@ -201,7 +201,6 @@ namespace Example
             {
                 cki = Console.ReadKey();
             } while (cki.Key != ConsoleKey.Q && (cki.Modifiers & ConsoleModifiers.Control) == 0);
-
         }
     }
 
@@ -212,4 +211,3 @@ namespace Example
         public string Name { get; set; }
     }
 }
-

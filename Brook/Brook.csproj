@@ -9,9 +9,9 @@
    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
    <RootNamespace>jIAnSoft.Brook</RootNamespace>
-   <AssemblyVersion>19.2.1</AssemblyVersion>
-   <FileVersion>19.2.1</FileVersion>
-   <Version>19.2.1</Version>
+   <AssemblyVersion>19.5.17</AssemblyVersion>
+   <FileVersion>19.5.17</FileVersion>
+   <Version>19.5.17</Version>
    <PackageLicenseUrl>https://github.com/jiansoft/brook/blob/master/LICENSE</PackageLicenseUrl>
    <Copyright>Copyright © jIAnSoft 2018 ~ DateTime.Now()</Copyright>
    <PackageProjectUrl>https://github.com/jiansoft/brook</PackageProjectUrl>

@@ -26,6 +26,16 @@ namespace jIAnSoft.Brook.Utility
                     }
                 },
                 {
+                    "Microsoft.Data.SqlClient",
+                    new DbProviderFactoryConfigItem
+                    {
+                        Name = "Microsoft SqlClient Data Provider",
+                        Invariant = "Microsoft.Data.SqlClient",
+                        Description = ".Net Framework Data Provider for SqlServer",
+                        Type = "Microsoft.Data.SqlClient.SqlClientFactory, Microsoft.Data.SqlClient"
+                    }
+                },
+                {
                     "MySql.Data.MySqlClient",
                     new DbProviderFactoryConfigItem
                     {

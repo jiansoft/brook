@@ -10,19 +10,19 @@
   "Database": [
     {
       "Name": "mysql",
-      "Connection": "server=192.168.1.138;port=3306;uid=pi;pwd=1qaz@WSX;DataBase=test;charset=utf8;",
+      "Connection": "server=192.168.1.168;port=3306;uid=pi;pwd=1qaz@WSX;database=test;charset=utf8;",
       "ProviderName": "MySql.Data.MySqlClient",
       "CommandTimeout": 5
     },
     {
       "Name": "mssql",
-      "Connection": "server=192.168.1.213,1433;uid=pi;pwd=1qaz@WSX;database=test;Connection Timeout=5;",
+      "Connection": "server=192.168.1.168,1433;uid=pi;pwd=1qaz@WSX;database=test;Connection Timeout=5;",
       "ProviderName": "System.Data.SqlClient",
       "CommandTimeout": 5
     },
     {
       "Name": "posql",
-      "Connection": "server=192.168.1.138;port=5432;uid=pi;pwd=1qaz@WSX;database=test;",
+      "Connection": "server=192.168.1.168;port=5432;uid=pi;pwd=1qaz@WSX;database=test;",
       "ProviderName": "Npgsql",
       "CommandTimeout": 5
     },
@@ -30,6 +30,12 @@
       "Name": "sqlite",
       "Connection": "data source=.\\brook.sqlite;",
       "ProviderName": "System.Data.SQLite",
+      "CommandTimeout": 5
+    },
+    {
+      "Name": "sqlserver",
+      "Connection": "server=192.168.1.168,1433;uid=pi;pwd=1qaz@WSX;database=test;Connection Timeout=5;",
+      "ProviderName": "Microsoft.Data.SqlClient",
       "CommandTimeout": 5
     }
   ],
