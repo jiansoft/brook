@@ -27,10 +27,12 @@ Parameters format like below.
       <database>
         <!-- sql server -->
         <add name="mssql" connection="server=127.0.0.1;database=DbName;uid=sa;pwd=7533967" providerName="System.Data.SqlClient"/>
+        <add name="sqlserver" connection="server=127.0.0.1;database=DbName;uid=sa;pwd=7533967" providerName="Microsoft.Data.SqlClient"/>
         <!-- If use MySql, It's need download driver https://www.nuget.org/packages/MySql.Data/6.9.9 -->
         <add name="mysql" connection="server=127.0.0.1;uid=root;pwd=7533967;database=DbName" providerName="MySql.Data.MySqlClient"/>
         <!-- If use PostgreSQL need download driver https://www.nuget.org/packages/Npgsql/-->
         <add name="postgresql" connection="Host=127.0.0.1;uid=postgres;pwd=7533967;database=DbName" providerName="Npgsql"/>
+        <add name="sqlite" connection="data source=.\\brook.sqlite" providerName="System.Data.SQLite" commandTimeout="5" />
       </database>
     </framework>
   </jIAnSoft>
@@ -38,10 +40,14 @@ Parameters format like below.
     <DbProviderFactories>
         <!-- If use MySQL, Need register MySql's provider factory-->
         <remove invariant="MySql.Data.MySqlClient" />
-        <add name="MySQL Data Provider" invariant="MySql.Data.MySqlClient" description=".Net Framework Data Provider for MySQL" type="MySql.Data.MySqlClient.MySqlClientFactory, MySql.Data, Version=6.9.12.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d" />
+        <add name="MySQL Data Provider" invariant="MySql.Data.MySqlClient" description=".Net Framework Data Provider for MySQL" type="MySql.Data.MySqlClient.MySqlClientFactory, MySql.Data" />     
         <!-- If use PostgreSQL, Need register Npgsql's provider factory -->
         <remove invariant="Npgsql"/>
         <add name="Npgsql Data Provider" invariant="Npgsql" description="Data Provider for PostgreSQL" type="Npgsql.NpgsqlFactory, Npgsql" />
+        <remove invariant="System.Data.SQLite" />
+        <add name="SQLite Data Provider" invariant="System.Data.SQLite" description=".NET Framework Data Provider for SQLite" type="System.Data.SQLite.SQLiteFactory, System.Data.SQLite" />     
+        <remove invariant="Microsoft.Data.SqlClient" />
+        <add name="Microsoft SqlClient Data Provider" invariant="Microsoft.Data.SqlClient" description=".Net Framework Data Provider for SqlServer" type="Microsoft.Data.SqlClient.SqlClientFactory, Microsoft.Data.SqlClient" />
     </DbProviderFactories>
   </system.data>  
 </configuration>
@@ -50,15 +56,15 @@ Parameters format like below.
 3.Use examples
 ``` csharp
 //Get query data as DataSet
-var postgreDs = Brook.Load("postgresql").DataSet("select * FROM \"public\".\"account\";select * FROM \"public\".\"account\";");
+var postgreDs = Brook.Load("postgresql").DataSet("select * FROM public.account;select * FROM public.account;");
 
 //Get query data as DataTable
-var postgreTable = Brook.Load("postgresql").Table("select * FROM \"public\".\"account\"");
-var mysqlTable = Brook.Load("postgresql").Table(
+var postgreTable = Brook.Load("postgresql").Table("select * FROM public.account;");
+var mysqlTable = Brook.Load("mysql").Table(
     "SELECT `id`,`email`,`name` FROM `account` WHERE `id` = @id;",
     new DbParameter[]
     {
-        new NpgsqlParameter("@id", MySqlDbType.Int32)
+        new MySqlParameter("@id", MySqlDbType.Int32)
         {
             Value = 1
         }
