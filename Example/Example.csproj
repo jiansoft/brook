@@ -7,13 +7,13 @@
 
   <ItemGroup>
     <PackageReference Include="IdGen" Version="2.0.3" />
-    <PackageReference Include="jIAnSoft.Nami" Version="19.3.26" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19128.1-Preview" />
-    <PackageReference Include="MySql.Data" Version="8.0.16" />
-    <PackageReference Include="NLog.Config" Version="4.6.3" />
-    <PackageReference Include="Npgsql" Version="4.0.6" />
+    <PackageReference Include="jIAnSoft.Nami" Version="19.5.22" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19249.1" />
+    <PackageReference Include="MySql.Data" Version="8.0.17" />
+    <PackageReference Include="NLog.Config" Version="4.6.7" />
+    <PackageReference Include="Npgsql" Version="4.0.10" />
     <PackageReference Include="System.Data.SqlClient" Version="4.7.0-preview5.19224.8" />
-    <PackageReference Include="System.Data.SQLite" Version="1.0.110" />
+    <PackageReference Include="System.Data.SQLite" Version="1.0.111" />
   </ItemGroup>
 
   <ItemGroup>

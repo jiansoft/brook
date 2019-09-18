@@ -1,5 +1,5 @@
-﻿using System;
-using jIAnSoft.Brook.Configuration;
+﻿using jIAnSoft.Brook.Configuration;
+using System;
 
 namespace jIAnSoft.Brook.Mapper
 {

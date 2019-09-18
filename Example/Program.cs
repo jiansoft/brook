@@ -14,6 +14,7 @@ namespace Example
         private static readonly IdGenerator Generator = new IdGenerator(0);
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
+        private const string GetId = "SELECT max({id}) AS {id} FROM {account};";
         private const string Account = "SELECT TOP 10 {id},{name},{email} FROM {account} ORDER BY {id} DESC LIMIT 10;";
 
         private const string ForObject =
@@ -69,17 +70,19 @@ namespace Example
             {
                 using (var db = jIAnSoft.Brook.Mapper.Brook.Load(dbName))
                 {
-                    var query = db.Query<Account>(ConvertSeparate(ForObject, dt));
-                    var table = db.Table(ConvertSeparate(Account, dt));
-                    var dataSet = db.DataSet(ConvertSeparate(FindByName, dt), new[] {db.Parameter("@name", "許功蓋")});
-                    var account = db.First<Account>(ConvertSeparate(FindById, dt),
-                        new[] {db.Parameter("@id", 1, DbType.Int32)});
                     db.Execute(ConvertSeparate(InsertAccount, dt),
                         new[]
                         {
                             db.Parameter("@name", $"{Generator.CreateId()}"),
-                            db.Parameter("@email", $"{Generator.CreateId()}@{providerNme}.com")
+                            db.Parameter("@email", $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}@{providerNme}.com")
                         });
+                    var id = db.One<long>(ConvertSeparate(GetId, dt));
+                    var query = db.Query<Account>(ConvertSeparate(ForObject, dt));
+                    var table = db.Table(ConvertSeparate(Account, dt));
+                    var dataSet = db.DataSet(ConvertSeparate(FindByName, dt), new[] {db.Parameter("@name", "許功蓋")});
+                    var account = db.First<Account>(ConvertSeparate(FindById, dt),
+                        new[] {db.Parameter("@id", id, DbType.Int32)});
+
 
                     foreach (var row in query)
                     {
@@ -157,7 +160,7 @@ namespace Example
             {
                 "mysql",
                 "posql",
-                "sqlite",
+                //  "sqlite",
                 "mssql",
                 "sqlserver"
             };
@@ -187,7 +190,7 @@ namespace Example
             }
 #endif
 
-            Nami.Delay(0).Do(() =>
+            Nami.RightNow().Do(() =>
             {
                 Run(0);
                 Run(0);

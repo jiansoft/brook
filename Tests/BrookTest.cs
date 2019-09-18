@@ -212,9 +212,9 @@ namespace Tests
                 switch (dbName)
                 {
                     case "mssql":
-                        continue;
-                        //dt = DatabaseType.SQLServer;
-                       // break;
+                        //continue;
+                        dt = DatabaseType.SQLServer;
+                        break;
                     case "posql":
                         dt = DatabaseType.PostgreSQL;
                         break;
@@ -245,7 +245,7 @@ namespace Tests
 
                     var first = db.First<Account>(
                         ConvertSeparate(FindById, dt),
-                        new[] {db.Parameter("@id", 1, DbType.Int32)});
+                        new[] {db.Parameter("@id", id, DbType.Int32)});
                     TestContext.WriteLine($"{providerNme} first  {first.Id} {first.Name} {first.Email}");
 
                     var query = db.Query<Account>(ConvertSeparate(Query, dt));
