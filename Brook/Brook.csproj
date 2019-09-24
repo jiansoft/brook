@@ -12,7 +12,7 @@
    <AssemblyVersion>19.9.24</AssemblyVersion>
    <FileVersion>19.9.24</FileVersion>
    <Version>19.9.24</Version>
-   <PackageLicenseUrl>https://github.com/jiansoft/brook/blob/master/LICENSE</PackageLicenseUrl>
+   <PackageLicenseUrl></PackageLicenseUrl>
    <Copyright>Copyright © jIAnSoft 2018 ~ DateTime.Now()</Copyright>
    <PackageProjectUrl>https://github.com/jiansoft/brook</PackageProjectUrl>
    <RepositoryUrl>https://github.com/jiansoft/brook.git</RepositoryUrl>
@@ -21,6 +21,7 @@
    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
    <AssemblyName>Brook</AssemblyName>
    <Product>jIAnSoft.Brook</Product>
+   <PackageLicenseExpression>MIT</PackageLicenseExpression>
    
   </PropertyGroup>
 
