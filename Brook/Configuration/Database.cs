@@ -9,7 +9,7 @@
         public DatabaseCollection Which => base[""] as DatabaseCollection;
     }
 
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETSTANDARD2_1
 
     public class DatabaseWrap
     {

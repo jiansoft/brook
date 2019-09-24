@@ -39,7 +39,16 @@ namespace jIAnSoft.Brook
         /// 目前連線的資料庫位置
         /// </summary>
         public string ConnectionSource => _connSetting.ConnectionString;
-
+        
+#if  NETSTANDARD2_1
+        static DbProvider()
+        {
+            foreach (var (_, value) in Utility.DbProviderFactories.Providers)
+            {
+                System.Data.Common.DbProviderFactories.RegisterFactory(value.Invariant,value.Type);
+            }
+        }
+#endif
         /*
         /// <summary>
         /// </summary>
@@ -74,6 +83,7 @@ namespace jIAnSoft.Brook
             DbConfig = dbConfig;
         }
 
+         
         /// <inheritdoc />
         /// <summary>
         /// </summary>
@@ -81,7 +91,7 @@ namespace jIAnSoft.Brook
         private DbProvider(ConnectionStringSettings connSettings)
         {
             _connSetting = connSettings;
-#if NET461
+#if NET461 || NETSTANDARD2_1
             _provider = System.Data.Common.DbProviderFactories.GetFactory(_connSetting.ProviderName);
 #elif NETSTANDARD2_0
             _provider = DbProviderFactories.GetFactory(_connSetting.ProviderName);

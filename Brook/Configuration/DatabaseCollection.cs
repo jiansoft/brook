@@ -26,7 +26,7 @@ namespace jIAnSoft.Brook.Configuration
             return BaseGet(key) != null;
         }
     }
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETSTANDARD2_1
     using System.Collections.Generic;
 
     public class DatabaseCollection

@@ -1,11 +1,9 @@
-﻿
-
-using System;
+﻿using System;
 using System.Globalization;
 
 namespace jIAnSoft.Brook.Configuration
 {
-#if NET461
+#if NET461 
     using System.Configuration;
 
     public class Common : ConfigurationElement
@@ -67,7 +65,7 @@ namespace jIAnSoft.Brook.Configuration
         public string Name => Convert.ToString(base["name"]);
 
     }
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETSTANDARD2_1
     public class Common 
     {
         public Common(string culture, string timezone)

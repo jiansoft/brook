@@ -48,7 +48,7 @@ namespace jIAnSoft.Brook.Configuration
         }
     }
 
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETSTANDARD2_1
     public sealed class DatabaseConfiguration 
     {
         public string Connection { get; set; }

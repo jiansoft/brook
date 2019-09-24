@@ -180,9 +180,9 @@ namespace Example
             }
         }
 
-        private static void Main(string[] args)
+        public static void Main(string[] args)
         {
-#if NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2
+#if NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0
             if (File.Exists("Example.dll.config"))
             {
                 //There need to delete .net framework config file if we run the program as .net core app
@@ -193,8 +193,8 @@ namespace Example
             Nami.RightNow().Do(() =>
             {
                 Run(0);
-                Run(0);
-                Run(0);
+               // Run(0);
+               // Run(0);
             });
 
             ConsoleKeyInfo cki;
