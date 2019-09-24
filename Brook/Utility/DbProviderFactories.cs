@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETSTANDARD2_0 || NETSTANDARD2_1
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Reflection;
@@ -6,9 +7,13 @@ namespace jIAnSoft.Brook.Utility
 {
     public static class DbProviderFactories
     {
-        internal static readonly Dictionary<string, DbProviderFactoryConfigItem> Providers;
-        
-#if NETSTANDARD2_0 || NETSTANDARD2_1
+#if NETSTANDARD2_0 
+        private 
+#endif
+#if NETSTANDARD2_1 
+        internal 
+#endif
+        static readonly Dictionary<string, DbProviderFactoryConfigItem> Providers;
         static DbProviderFactories()
         {
             // <add name="MySQL Data Provider" invariant="MySql.Data.MySqlClient" description=".Net Framework Data Provider for MySQL" type="MySql.Data.MySqlClient.MySqlClientFactory, MySql.Data, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d" />
@@ -67,7 +72,7 @@ namespace jIAnSoft.Brook.Utility
                 }
             };
         }
-#endif
+
         
 #if NETSTANDARD2_0
         public static DbProviderFactory GetFactory(string providerInvariantName)
@@ -103,5 +108,5 @@ namespace jIAnSoft.Brook.Utility
         }
 #endif
     }
-
 }
+#endif

@@ -3,7 +3,7 @@ A high performance micro sql helper supporting SQL Server、MySql、PostgreSQL
 
 [![NuGet](https://img.shields.io/nuget/v/jIAnSoft.Brook.svg?label=nuget&style=flat-square)](https://www.nuget.org/packages/jIAnSoft.Brook/)
 
-Supported .NET Framework 4.6.1 and .NET Standard 2.0
+Supported .NET Framework 4.6.1、.NET Standard 2.0 and .NET Standard 2.1
 
 Usage
 ================
