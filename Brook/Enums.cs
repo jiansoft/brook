@@ -4,6 +4,7 @@
     {
         MySQL,
         SQLServer,
+        MsSQL,
         PostgreSQL,
         SQLite
         //Oracle,

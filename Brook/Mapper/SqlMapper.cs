@@ -12,7 +12,7 @@ namespace jIAnSoft.Brook.Mapper
 
         private DbProvider _db;
 
-        public string ConnectionSource => _db.ConnectionSource;
+        public string ConnectionSource => _db.DbConfig.Connection;
 
         internal SqlMapper(string dbName) : this(Section.Get.Database.Which.ContainsKey(dbName)
             ? Section.Get.Database.Which[dbName]

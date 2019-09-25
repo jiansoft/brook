@@ -24,6 +24,9 @@ namespace jIAnSoft.Brook.Mapper
 
             switch (dt)
             {
+                case DatabaseType.MsSQL:
+                    dbConfig.ProviderName = "Microsoft.Data.SqlClient";
+                    break;
                 case DatabaseType.SQLServer:
                     dbConfig.ProviderName = "System.Data.SqlClient";
                     break;
