@@ -9,8 +9,8 @@
    <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
    <RootNamespace>jIAnSoft.Brook</RootNamespace>
-   <AssemblyVersion>19.9.24</AssemblyVersion>
-   <FileVersion>19.9.24</FileVersion>
+   <AssemblyVersion>20.2.26</AssemblyVersion>
+   <FileVersion>20.2.26</FileVersion>
    <Version>19.9.24</Version>
    <PackageLicenseUrl></PackageLicenseUrl>
    <Copyright>Copyright © jIAnSoft 2018 ~ DateTime.Now()</Copyright>

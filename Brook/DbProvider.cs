@@ -143,11 +143,11 @@ namespace jIAnSoft.Brook
             {
                 throw new SqlException($"Can't create a new instance of the provider's Command ({DbConfig.Name}).");
             }
-
+            
+            cmd.Connection = CreateConnection();
             cmd.CommandTimeout = timeout;
             cmd.CommandText = sql;
             cmd.CommandType = type;
-            cmd.Connection = CreateConnection();
 
             if (null != parameters)
             {
@@ -302,7 +302,7 @@ namespace jIAnSoft.Brook
         /// <returns></returns>
         internal int Execute(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
-            var r = Execute(timeout, type, sql, new List<DbParameter[]> {parameters});
+            var r = Execute(timeout, type, sql, new [] {parameters});
             return r.Length > 0 ? r[0] : 0;
         }
 
@@ -314,22 +314,21 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal int[] Execute(int timeout, CommandType type, string sql, List<DbParameter[]> parameters)
+        internal int[] Execute(int timeout, CommandType type, string sql, DbParameter[][] parameters)
         {
-            var returnValue = new int[parameters.Count];
+            var returnValue = new int[parameters.Length];
             DbParameter[] currentDbParameter = null;
             using (var cmd = CreateCommand(timeout, type, sql, null))
             {
                 try
                 {
-                    var tmp = parameters.ToArray();
-                    for (var index = 0; index < tmp.Length; index++)
+                    for (var index = 0; index < parameters.Length; index++)
                     {
                         cmd.Parameters.Clear();
-                        if (null != tmp[index])
+                        if (null != parameters[index])
                         {
-                            cmd.Parameters.AddRange(tmp[index]);
-                            currentDbParameter = tmp[index];
+                            cmd.Parameters.AddRange(parameters[index]);
+                            currentDbParameter = parameters[index];
                         }
 
                         var r = cmd.ExecuteNonQuery();
@@ -393,27 +392,23 @@ namespace jIAnSoft.Brook
         internal DataTable Table(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             using (var t = new DataTable {Locale = Section.Get.Common.Culture})
+            using (var adapter = CreateDataAdapter())
+            using (var cmd = CreateCommand(timeout, type, sql, parameters))
             {
-                using (var adapter = CreateDataAdapter())
+                try
                 {
-                    using (var cmd = CreateCommand(timeout, type, sql, parameters))
-                    {
-                        try
-                        {
-                            adapter.SelectCommand = cmd;
-                            adapter.Fill(t);
-                            adapter.Dispose();
-                            return t;
-                        }
-                        catch (Exception e)
-                        {
-                            throw SqlException(e, sql, parameters);
-                        }
-                        finally
-                        {
-                            cmd.Connection.Close();
-                        }
-                    }
+                    adapter.SelectCommand = cmd;
+                    adapter.Fill(t);
+                    adapter.Dispose();
+                    return t;
+                }
+                catch (Exception e)
+                {
+                    throw SqlException(e, sql, parameters);
+                }
+                finally
+                {
+                    cmd.Connection.Close();
                 }
             }
         }
@@ -429,27 +424,23 @@ namespace jIAnSoft.Brook
         internal DataSet DataSet(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
+            using (var adapter = CreateDataAdapter())
+            using (var cmd = CreateCommand(timeout, type, sql, parameters))
             {
-                using (var adapter = CreateDataAdapter())
+                try
                 {
-                    using (var cmd = CreateCommand(timeout, type, sql, parameters))
-                    {
-                        try
-                        {
-                            adapter.SelectCommand = cmd;
-                            adapter.Fill(ds);
-                            adapter.Dispose();
-                            return ds;
-                        }
-                        catch (Exception e)
-                        {
-                            throw SqlException(e, sql, parameters);
-                        }
-                        finally
-                        {
-                            cmd.Connection.Close();
-                        }
-                    }
+                    adapter.SelectCommand = cmd;
+                    adapter.Fill(ds);
+                    adapter.Dispose();
+                    return ds;
+                }
+                catch (Exception e)
+                {
+                    throw SqlException(e, sql, parameters);
+                }
+                finally
+                {
+                    cmd.Connection.Close();
                 }
             }
         }

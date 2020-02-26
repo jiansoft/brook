@@ -371,6 +371,19 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public int[] Execute(int timeout, CommandType commandType, string sql, List<DbParameter[]> parameters)
         {
+           return Execute(timeout, commandType, sql, parameters.ToArray());
+        }
+        
+        /// <summary>
+        ///  Executes a SQL statement against the connection and returns the number of rows affected.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        public int[] Execute(int timeout, CommandType commandType, string sql, DbParameter[][] parameters)
+        {
             using (var db = new DbProvider(_db.DbConfig))
             {
                 return db.Execute(timeout, commandType, sql, parameters);
