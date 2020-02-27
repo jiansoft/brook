@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace jIAnSoft.Brook
 {
-    public class DbProvider : ProviderBase, IDisposable
+    public sealed class DbProvider : ProviderBase, IDisposable
     {
         private bool _disposed;
 
@@ -278,7 +278,8 @@ namespace jIAnSoft.Brook
                     dbParameters = dbParameters.Concat(parameters).ToArray();
                 }
 
-                Execute(timeout, type, sql, dbParameters);
+                Execute(timeout, type, sql, new [] {dbParameters} );
+                
                 if (null == p.Value)
                 {
                     return default;
@@ -300,20 +301,6 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal int Execute(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
-        {
-            var r = Execute(timeout, type, sql, new [] {parameters});
-            return r.Length > 0 ? r[0] : 0;
-        }
-
-        /// <summary>
-        ///  Executes a SQL statement against the connection and returns the number of rows affected.
-        /// </summary>
-        /// <param name="timeout"></param>
-        /// <param name="type">SQL command type SP、Text</param>
-        /// <param name="sql">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
         internal int[] Execute(int timeout, CommandType type, string sql, DbParameter[][] parameters)
         {
             var returnValue = new int[parameters.Length];
@@ -325,7 +312,7 @@ namespace jIAnSoft.Brook
                     for (var index = 0; index < parameters.Length; index++)
                     {
                         cmd.Parameters.Clear();
-                        if (null != parameters[index])
+                        if (null != parameters[index] && parameters[index].Any())
                         {
                             cmd.Parameters.AddRange(parameters[index]);
                             currentDbParameter = parameters[index];
@@ -461,7 +448,6 @@ namespace jIAnSoft.Brook
             _disposed = true;
             _provider = null;
             DbConfig = null;
-           
         }
 
         public void Dispose()

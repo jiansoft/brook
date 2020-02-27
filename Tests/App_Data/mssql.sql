@@ -23,3 +23,20 @@ GO
 INSERT INTO [dbo].[account] (name,email)VALUES('Ben Nuttall', 'eddie@sqlserver.com');
 INSERT INTO [dbo].[account] (name,email)VALUES('許功蓋', 'RedHat@sqlserver.com');
 GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [sp_MaxAccountId_Sel]
+	
+AS
+BEGIN
+	SET NOCOUNT ON;
+	DECLARE @intId 	BIGINT;
+    -- Insert statements for procedure here
+	SELECT @intId = MAX(id) FROM [test].[dbo].[account];
+	
+	RETURN @intId;
+END
+GO

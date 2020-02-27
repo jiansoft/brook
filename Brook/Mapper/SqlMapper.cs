@@ -6,7 +6,7 @@ using System.Data.Common;
 
 namespace jIAnSoft.Brook.Mapper
 {
-    public class SqlMapper : IDisposable
+    public sealed class SqlMapper : IDisposable
     {
         private bool _disposed;
 
@@ -268,7 +268,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public T Value<T>(string sql, DbParameter[] parameters = null)
         {
-            return Value<T>(CommandType.Text, sql, parameters);
+            return Value<T>(CommandType.StoredProcedure, sql, parameters);
         }
 
         /// <summary>
@@ -332,10 +332,8 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public int Execute(int timeout, CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db.DbConfig))
-            {
-                return db.Execute(timeout, commandType, sql, parameters);
-            }
+            var r = Execute(timeout, commandType, sql, new [] {parameters});
+            return r.Length > 0 ? r[0] : 0;
         }
         
         /// <summary>
@@ -346,7 +344,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public int[] Execute(string sql, List<DbParameter[]> parameters)
         {
-            return Execute(CommandType.Text, sql, parameters);
+            return Execute(sql, parameters.ToArray());
         }
 
         /// <summary>
@@ -358,7 +356,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public int[] Execute(CommandType commandType, string sql, List<DbParameter[]> parameters)
         {
-            return Execute(_db.DbConfig.CommandTimeout, commandType, sql, parameters);
+            return Execute(_db.DbConfig.CommandTimeout, commandType, sql, parameters.ToArray());
         }
 
         /// <summary>
@@ -373,7 +371,30 @@ namespace jIAnSoft.Brook.Mapper
         {
            return Execute(timeout, commandType, sql, parameters.ToArray());
         }
-        
+
+        /// <summary>
+        /// Executes a SQL statement against the connection and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql">SQL 指令</param>
+        /// <param name="parameters">SQL 指令參數</param>
+        /// <returns></returns>
+        public int[] Execute(string sql, DbParameter[][] parameters)
+        {
+            return Execute(CommandType.Text, sql, parameters);
+        }
+
+        /// <summary>
+        ///  Executes a SQL statement against the connection and returns the number of rows affected.
+        /// </summary>
+        /// <param name="commandType">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        public int[] Execute(CommandType commandType, string sql, DbParameter[][] parameters)
+        {
+            return Execute(_db.DbConfig.CommandTimeout, commandType, sql, parameters);
+        }
+
         /// <summary>
         ///  Executes a SQL statement against the connection and returns the number of rows affected.
         /// </summary>
@@ -442,6 +463,7 @@ namespace jIAnSoft.Brook.Mapper
             {
                 return;
             }
+
             _db.Dispose();
             _db = null;
         }

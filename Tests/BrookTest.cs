@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using Newtonsoft.Json;
 
 namespace Tests
 {
@@ -13,17 +14,25 @@ namespace Tests
     public class BrookTest
     {
         private static readonly IdGenerator Generator = new IdGenerator(0);
-        private readonly string[] _sqlType = {
+
+        private readonly string[] _sqlType =
+        {
             "mysql",
             "posql",
             "sqlite",
-             "mssql"
+            "mssql"
         };
+
         private const string Query = "SELECT TOP 5 {id} AS {Id},{name} AS {Name},{email} AS {Email} FROM {account} ORDER BY {id} DESC LIMIT 5;";
         private const string Insert = "insert into {account} ({name},{email})values(@name, @email) ";
         private const string Update = "Update {account} SET {name} = '';";
         private const string Delete = "DELETE FROM {account} WHERE {id} = @id;";
-        private const string FindById = "SELECT {id} AS {Id},{name} AS {Name},{email} AS {Email} FROM {account} where {id} = @id;";
+
+        private const string FindById =
+            "SELECT {id} AS {Id},{name} AS {Name},{email} AS {Email} FROM {account} where {id} = @id;";
+
+        private const string FindByName =
+            "SELECT {id} AS {Id},{name} AS {Name},{email} AS {Email} FROM {account} where {name} = @name;";
 
         private static string ConvertSeparate(string sql, DatabaseType dt = DatabaseType.SQLite)
         {
@@ -37,7 +46,6 @@ namespace Tests
                     return sql.Replace("{", "`").Replace("}", "`").Replace("TOP 5", "");
                 default:
                     return sql.Replace("{", "").Replace("}", "").Replace("TOP 5", "");
-
             }
         }
 
@@ -57,6 +65,136 @@ namespace Tests
         }
 
         [Test]
+        public void TestValue()
+        {
+            using (var db = Brook.Load("sqlserver"))
+            {
+                var maxId = db.Value<long>("[dbo].[sp_MaxAccountId_Sel]");
+                TestContext.WriteLine($"MaxId = {maxId}");
+                maxId = db.Value<long>(CommandType.StoredProcedure, "[dbo].[sp_MaxAccountId_Sel]");
+                TestContext.WriteLine($"MaxId = {maxId}");
+                maxId = db.Value<long>(15, CommandType.StoredProcedure, "[dbo].[sp_MaxAccountId_Sel]");
+                TestContext.WriteLine($"MaxId = {maxId}");
+            }
+        }
+
+        [Test]
+        public void TestOne()
+        {
+            using (var db = Brook.Load("sqlserver"))
+            {
+                var maxId = db.One<long>(
+                    @"DECLARE @intId BIGINT;SELECT @intId = MAX(id) FROM [test].[dbo].[account]; SELECT @intId;");
+                TestContext.WriteLine($"MaxId = {maxId}");
+                maxId = db.One<long>(15, CommandType.Text,
+                    @"DECLARE @intId BIGINT;SELECT @intId = MAX(id) FROM [test].[dbo].[account]; SELECT @intId;");
+                TestContext.WriteLine($"MaxId = {maxId}");
+            }
+        }
+
+        [Test]
+        public void TestExecute()
+        {
+            using (var db = Brook.Load("sqlserver"))
+            {
+                var name = $"{Generator.CreateId()}";
+                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                {
+                    new[]
+                    {
+                        db.Parameter("@name", name),
+                        db.Parameter("@email", $"{name}@sqlserver.com")
+                    }
+                });
+                var account = db.First<Account>(
+                    ConvertSeparate(FindByName, DatabaseType.SQLServer),
+                    new[] {db.Parameter("@name", name)});
+                TestContext.WriteLine($"[1] Id = {account.Id} Name = {account.Name} Email = {account.Email}");
+
+                name = $"{Generator.CreateId()}";
+                db.Execute(CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                {
+                    new[]
+                    {
+                        db.Parameter("@name", name),
+                        db.Parameter("@email", $"{name}@sqlserver.com")
+                    }
+                });
+                account = db.First<Account>(
+                    ConvertSeparate(FindByName, DatabaseType.SQLServer),
+                    new[] {db.Parameter("@name", name)});
+                TestContext.WriteLine($"[2] Id = {account.Id} Name = {account.Name} Email = {account.Email}");
+
+                name = $"{Generator.CreateId()}";
+                db.Execute(ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                {
+                    new[]
+                    {
+                        db.Parameter("@name", name),
+                        db.Parameter("@email", $"{name}@sqlserver.com")
+                    }
+                });
+                account = db.First<Account>(
+                    ConvertSeparate(FindByName, DatabaseType.SQLServer),
+                    new[] {db.Parameter("@name", name)});
+                TestContext.WriteLine($"[3] Id = {account.Id} Name = {account.Name} Email = {account.Email}");
+
+                name = $"{Generator.CreateId()}";
+                db.Execute(ConvertSeparate(Insert, DatabaseType.SQLServer), new List<DbParameter[]>
+                {
+                    new[]
+                    {
+                        db.Parameter("@name", name),
+                        db.Parameter("@email", $"{name}@sqlserver.com")
+                    }
+                });
+                account = db.First<Account>(
+                    ConvertSeparate(FindByName, DatabaseType.SQLServer),
+                    new[] {db.Parameter("@name", name)});
+                TestContext.WriteLine($"[4] Id = {account.Id} Name = {account.Name} Email = {account.Email}");
+
+                name = $"{Generator.CreateId()}";
+                var count = db.Execute(CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer),
+                    new List<DbParameter[]>
+                    {
+                        new[]
+                        {
+                            db.Parameter("@name", name),
+                            db.Parameter("@email", $"{name}@sqlserver.com")
+                        }
+                    });
+                account = db.First<Account>(
+                    ConvertSeparate(FindByName, DatabaseType.SQLServer),
+                    new[] {db.Parameter("@name", name)});
+                TestContext.WriteLine(
+                    $"[5] Id = {account.Id} Name = {account.Name} Email = {account.Email} count:{JsonConvert.SerializeObject(count)}");
+
+                name = $"{Generator.CreateId()}";
+                count = db.Execute(5, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer),
+                    new List<DbParameter[]>
+                    {
+                        new[]
+                        {
+                            db.Parameter("@name", name),
+                            db.Parameter("@email", $"{name}@sqlserver.com")
+                        }
+                    });
+                account = db.First<Account>(
+                    ConvertSeparate(FindByName, DatabaseType.SQLServer),
+                    new[] {db.Parameter("@name", name)});
+                TestContext.WriteLine(
+                    $"[6] Id = {account.Id} Name = {account.Name} Email = {account.Email} count:{JsonConvert.SerializeObject(count)}");
+
+                name = $"{Generator.CreateId()}";
+                db.Execute($"insert into [account] ([name],[email])values('{name}', '{name}@sqlserver.com');");
+                account = db.First<Account>(
+                    ConvertSeparate(FindByName, DatabaseType.SQLServer),
+                    new[] {db.Parameter("@name", name)});
+                TestContext.WriteLine($"[7] Id = {account.Id} Name = {account.Name} Email = {account.Email}");
+            }
+        }
+
+        [Test]
         public void TestLoad()
         {
             foreach (var dbName in _sqlType)
@@ -65,8 +203,8 @@ namespace Tests
                 switch (dbName)
                 {
                     case "mssql":
-                    dt = DatabaseType.SQLServer;
-                    break;
+                        dt = DatabaseType.SQLServer;
+                        break;
                     case "posql":
                         dt = DatabaseType.PostgreSQL;
                         break;
@@ -77,9 +215,10 @@ namespace Tests
                         dt = DatabaseType.SQLite;
                         break;
                 }
+
                 var providerNme = Enum.GetName(typeof(DatabaseType), dt);
                 TestContext.WriteLine($"{providerNme}");
-                
+
                 try
                 {
                     Brook.LoadFromConnectionString(Brook.Load(dbName).ConnectionSource, dt);
@@ -111,15 +250,16 @@ namespace Tests
                         break;
                     default:
                         continue;
-                        /*dt = DatabaseType.SQLite;
-                        using (var db = jIAnSoft.Brook.Mapper.Brook.Load(dbName))
-                        {
-                            db.Execute(
-                                @"CREATE TABLE IF NOT EXISTS account (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT not null, email TEXT not null);");
-                        }
+                    /*dt = DatabaseType.SQLite;
+                    using (var db = jIAnSoft.Brook.Mapper.Brook.Load(dbName))
+                    {
+                        db.Execute(
+                            @"CREATE TABLE IF NOT EXISTS account (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT not null, email TEXT not null);");
+                    }
 
-                        break;*/
+                    break;*/
                 }
+
                 var providerNme = Enum.GetName(typeof(DatabaseType), dt);
                 TestContext.WriteLine($"{providerNme}");
                 try
@@ -223,14 +363,15 @@ namespace Tests
                         break;
                     default:
                         continue;
-                        /*dt = DatabaseType.SQLite;
-                        using (var db = jIAnSoft.Brook.Mapper.Brook.Load(dbName))
-                        {
-                            db.Execute(@"CREATE TABLE IF NOT EXISTS account (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT not null, email TEXT not null);");
-                        }
+                    /*dt = DatabaseType.SQLite;
+                    using (var db = jIAnSoft.Brook.Mapper.Brook.Load(dbName))
+                    {
+                        db.Execute(@"CREATE TABLE IF NOT EXISTS account (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT not null, email TEXT not null);");
+                    }
 
-                        break;*/
+                    break;*/
                 }
+
                 var providerNme = Enum.GetName(typeof(DatabaseType), dt);
                 using (var db = Brook.Load(dbName))
                 {
@@ -287,7 +428,7 @@ namespace Tests
                         1,
                         CommandType.Text,
                         ConvertSeparate(Delete, dt),
-                        new[] { db.Parameter("@id", id, DbType.Int64) });
+                        new[] {db.Parameter("@id", id, DbType.Int64)});
                     TestContext.WriteLine($"{providerNme} delete id:{id} count:{count}");
 
                     count = db.Execute(ConvertSeparate(Update, dt));

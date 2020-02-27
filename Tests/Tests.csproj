@@ -6,12 +6,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="IdGen" Version="2.0.3" />
-        <PackageReference Include="MySql.Data" Version="8.0.14" />
-        <PackageReference Include="Npgsql" Version="4.0.4" />
-        <PackageReference Include="nunit" Version="3.11.0" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
-        <PackageReference Include="System.Data.SQLite" Version="1.0.109.2" />
+        <PackageReference Include="IdGen" Version="2.1.0" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.1" />
+        <PackageReference Include="MySql.Data" Version="8.0.19" />
+        <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+        <PackageReference Include="Npgsql" Version="4.1.3.1" />
+        <PackageReference Include="nunit" Version="3.12.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+        <PackageReference Include="System.Data.SQLite" Version="1.0.112" />
     </ItemGroup>
  <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
   
