@@ -11,7 +11,7 @@
    <RootNamespace>jIAnSoft.Brook</RootNamespace>
    <AssemblyVersion>20.2.26</AssemblyVersion>
    <FileVersion>20.2.26</FileVersion>
-   <Version>19.9.24</Version>
+   <Version>20.2.26</Version>
    <PackageLicenseUrl></PackageLicenseUrl>
    <Copyright>Copyright © jIAnSoft 2018 ~ DateTime.Now()</Copyright>
    <PackageProjectUrl>https://github.com/jiansoft/brook</PackageProjectUrl>
