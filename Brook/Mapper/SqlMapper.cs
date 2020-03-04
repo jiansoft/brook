@@ -356,7 +356,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public int[] Execute(CommandType commandType, string sql, List<DbParameter[]> parameters)
         {
-            return Execute(_db.DbConfig.CommandTimeout, commandType, sql, parameters.ToArray());
+            return Execute(commandType, sql, parameters.ToArray());
         }
 
         /// <summary>
