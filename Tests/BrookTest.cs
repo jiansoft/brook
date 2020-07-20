@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using Newtonsoft.Json;
 
 namespace Tests
@@ -18,8 +19,8 @@ namespace Tests
         private readonly string[] _sqlType =
         {
             "mysql",
-            "posql",
-            "sqlite",
+            //"posql",
+            //"sqlite",
             "mssql"
         };
 
@@ -90,6 +91,139 @@ namespace Tests
                     @"DECLARE @intId BIGINT;SELECT @intId = MAX(id) FROM [test].[dbo].[account]; SELECT @intId;");
                 TestContext.WriteLine($"MaxId = {maxId}");
             }
+        }
+
+        [Test]
+        public void TestTransaction()
+        {
+            SqlMapper db = null;
+
+            try
+            {
+                db = Brook.Load("sqlserver");
+                var name = $"我是交易1-{DateTime.Now:HHmmss}";
+                db.BeginTransaction();
+                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                {
+                    new[]
+                    {
+                        db.Parameter("@name", name),
+                        db.Parameter("@email", $"{name}@sqlserver.com")
+                    }
+                });
+                var t = db.Table(ConvertSeparate(FindByName, DatabaseType.SQLServer), new[] { db.Parameter("@name", name) });
+                TestContext.WriteLine($"[Table] Id = {t.Rows[0]["Id"]} Name = {t.Rows[0]["Name"]} Email = {t.Rows[0]["Email"]} ");
+                db.CommitTransaction();
+
+                name = $"我是交易2-{DateTime.Now:HHmmss}";
+                db.BeginTransaction();
+                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                {
+                    new[]
+                    {
+                        db.Parameter("@name", name),
+                        db.Parameter("@email", $"{name}@sqlserver.com")
+                    }
+                });
+                var account = db.First<Account>(ConvertSeparate(FindByName, DatabaseType.SQLServer), new[] { db.Parameter("@name", name) });
+                TestContext.WriteLine($"[First] Id = {account.Id} Name = {account.Name} Email = {account.Email}");
+                var accounts = db.Query<Account>(ConvertSeparate(FindByName, DatabaseType.SQLServer), new[] { db.Parameter("@name", name) });
+                TestContext.WriteLine($"[Query] Id = {accounts[0].Id} Name = {accounts[0].Name} Email = {accounts[0].Email}");
+                
+                db.CommitTransaction();
+
+                name = $"我是交易3-{DateTime.Now:HHmmss}";
+                db.BeginTransaction();
+                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                {
+                    new[]
+                    {
+                        db.Parameter("@name", name),
+                        db.Parameter("@email", $"{name}@sqlserver.com")
+                    }
+                });
+                db.RollbackTransaction();
+
+                name = $"我不是交易1-{DateTime.Now:HHmmss}";
+                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                {
+                    new[]
+                    {
+                        db.Parameter("@name", name),
+                        db.Parameter("@email", $"{name}@sqlserver.com")
+                    }
+                });
+                var ds = db.DataSet(ConvertSeparate(FindByName, DatabaseType.SQLServer), new[] { db.Parameter("@name", name) });
+                TestContext.WriteLine($"[DataSet] Id = {ds.Tables[0].Rows[0]["Id"]} Name = {ds.Tables[0].Rows[0]["Name"]} Email = {ds.Tables[0].Rows[0]["Email"]}");
+
+                
+                name = $"我是交易4-{DateTime.Now:HHmmss}";
+                db.BeginTransaction();
+                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                {
+                    new[]
+                    {
+                        db.Parameter("@name", name),
+                        db.Parameter("@email", $"{name}@sqlserver.com")
+                    }
+                });
+                db.ChangeDatabase("Order");
+                //throw new Exception("QQ");
+            }
+            catch (Exception e)
+            {
+                TestContext.WriteLine(e);
+                if (db != null)
+                {
+                    db.RollbackTransaction();
+                    db.Dispose();
+                }
+            }
+        }
+
+        [Test]
+        public void TestQuery()
+        {
+            try
+            {
+                using (var db = Brook.Load("sqlserver"))
+                {
+                    db.Query<Account>(15, CommandType.Text, ConvertSeparate(Query, DatabaseType.SQLServer));
+                }
+
+                var sw = new Stopwatch();
+                sw.Reset();
+                sw.Start();
+                Brook.Load("sqlserver").Query<Account>(15, CommandType.Text, ConvertSeparate(Query, DatabaseType.SQLServer));
+                sw.Stop();
+                TestContext.WriteLine($"Query 总毫秒:{sw.ElapsedMilliseconds}");
+                
+                sw.Reset();
+                sw.Start();
+                Brook.Load("sqlserver").Query<Account>(15, CommandType.Text, ConvertSeparate(Query, DatabaseType.SQLServer));
+                sw.Stop();
+                TestContext.WriteLine($"Query 总毫秒:{sw.ElapsedMilliseconds}");
+                
+                sw.Reset();
+                sw.Start();
+                Brook.Load("sqlserver").Query<Account>(15, CommandType.Text, ConvertSeparate(Query, DatabaseType.SQLServer));
+                sw.Stop();
+                TestContext.WriteLine($"Query 总毫秒:{sw.ElapsedMilliseconds}");
+                
+                sw.Reset();
+                sw.Start();
+                var l1 = Brook.Load("sqlserver").Query<Account>(15, CommandType.Text, ConvertSeparate(Query, DatabaseType.SQLServer));
+                sw.Stop();
+                TestContext.WriteLine($"Query 总毫秒:{sw.ElapsedMilliseconds}");
+                
+                TestContext.WriteLine($"Account : {l1.Count}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            
         }
 
         [Test]

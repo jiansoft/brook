@@ -9,9 +9,9 @@
    <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
    <RootNamespace>jIAnSoft.Brook</RootNamespace>
-   <AssemblyVersion>20.3.4</AssemblyVersion>
-   <FileVersion>20.3.4</FileVersion>
-   <Version>20.3.4</Version>
+   <AssemblyVersion>20.7.20</AssemblyVersion>
+   <FileVersion>20.7.20</FileVersion>
+   <Version>20.7.20</Version>
    <PackageLicenseUrl></PackageLicenseUrl>
    <Copyright>Copyright © jIAnSoft 2018 ~ DateTime.Now()</Copyright>
    <PackageProjectUrl>https://github.com/jiansoft/brook</PackageProjectUrl>
@@ -22,7 +22,7 @@
    <AssemblyName>Brook</AssemblyName>
    <Product>jIAnSoft.Brook</Product>
    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-   
+  
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net452|AnyCPU'">
@@ -50,12 +50,13 @@
   
   </ItemGroup>
   <ItemGroup>
-     <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.0.0" />
-     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.0.0" />
-     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.0.0" />
-     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.0.0" />
-     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.0" />
-     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.6.0" />
-    <PackageReference Include="System.Data.Common" Version="4.3.0" />
+     <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.5" />
+     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.5" />
+     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.5" />
+     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.1.5" />
+     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.5" />
+     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
+     <PackageReference Include="System.Data.Common" Version="4.3.0" />
+	   <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
    </ItemGroup>  
 </Project>

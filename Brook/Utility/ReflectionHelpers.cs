@@ -8,11 +8,12 @@ namespace jIAnSoft.Brook.Utility
 {
     public static class ReflectionHelpers
     {
-        internal static IEnumerable<FieldInfo> GetFields(this Type type)
+        private static IEnumerable<FieldInfo> GetFields(this Type type)
         {
             return type.GetRuntimeFields();
         }
-        internal static IEnumerable<PropertyInfo> GetProperties(this Type type)
+
+        private static IEnumerable<PropertyInfo> GetProperties(this Type type)
         {
             return type.GetRuntimeProperties();
         }
@@ -94,34 +95,32 @@ namespace jIAnSoft.Brook.Utility
             return false;
         }
 
+        private const BindingFlags Flags = BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Public |
+                                           BindingFlags.Instance | BindingFlags.Static;
 
         private static void SetValue<T>(object obj, string key, object value)
         {
+            var v = value == DBNull.Value
+                ? null
+                : value is T variable
+                    ? variable
+                    : value;
+
             var otp = obj.GetType();
-            var field = otp.GetField(key,
-                BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Public |
-                BindingFlags.Instance | BindingFlags.Static);
+            var field = otp.GetField(key, Flags);
             if (field != null)
             {
-                field.SetValue(obj,
-                    value == DBNull.Value
-                        ? null
-                        : value is T variable1
-                            ? variable1
-                            : value);
+                field.SetValue(obj, v);
                 return;
             }
-           
-            var property = otp.GetProperty(key,
-                BindingFlags.GetProperty | BindingFlags.NonPublic | BindingFlags.Public |
-                BindingFlags.Instance | BindingFlags.Static);
-           if (null == property) return;
-            property.SetValue(obj,
-                    value == DBNull.Value
-                        ? null
-                        : value is T variable
-                            ? variable
-                            : value);
+
+            var property = otp.GetProperty(key, Flags);
+            if (null == property)
+            {
+                return;
+            }
+
+            property.SetValue(obj, v);
         }
 
         public static void SetValue(object obj, string key, object value)
@@ -131,14 +130,12 @@ namespace jIAnSoft.Brook.Utility
 
         private static IEnumerable<FieldInfo> GetFields(IReflect ot)
         {
-            return ot.GetFields(BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Public |
-                                BindingFlags.Instance | BindingFlags.Static);
+            return ot.GetFields(Flags);
         }
 
         private static IEnumerable<PropertyInfo> GetProperties(IReflect ot)
         {
-            return ot.GetProperties(BindingFlags.GetProperty | BindingFlags.NonPublic | BindingFlags.Public |
-                                    BindingFlags.Instance | BindingFlags.Static);
+            return ot.GetProperties(Flags);
         }
 
         /// <summary>
@@ -150,7 +147,7 @@ namespace jIAnSoft.Brook.Utility
         public static T[] ConvertAs<T>(DataTable dt)
         {
             return dt.Rows.Count <= 0
-                ? new T[0]
+                ? Array.Empty<T>()
                 : (from DataRow dr in dt.Rows.AsParallel() select ConvertAs<T>(dr)).ToArray();
         }
 
@@ -162,14 +159,31 @@ namespace jIAnSoft.Brook.Utility
         /// <returns></returns>
         public static T ConvertAs<T>(DataRow row)
         {
-            var classobj = Activator.CreateInstance<T>();
+            var classObj = Activator.CreateInstance<T>();
             foreach (var column in row.Table.Columns)
             {
-                SetValue(classobj, column.ToString(), row[column.ToString()]);
+                SetValue(classObj, column.ToString(), row[column.ToString()]);
             }
-            return classobj;
+            return classObj;
         }
-        
+
+        /// <summary>
+        /// 將 Reader 內的的資料取出後放進 T 型別的物件內後回傳。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        public static T ConvertAs<T>(IDataRecord reader)
+        {
+            var instance = Activator.CreateInstance<T>();
+            for (var i = reader.FieldCount - 1; i >= 0; i--)
+            {
+                SetValue(instance, reader.GetName(i), reader.GetValue(i));
+            }
+
+            return instance;
+        }
+
         /// <summary>
         /// 將 object 內的的資料取出後放進 T 型別的物件內後回傳。
         /// </summary>
@@ -178,16 +192,16 @@ namespace jIAnSoft.Brook.Utility
         /// <returns></returns>
         public static T ConvertAs<T>(object o)
         {
-            var baseobj = Activator.CreateInstance<T>();
+            var baseObj = Activator.CreateInstance<T>();
             foreach (var f in GetFields(o.GetType()))
             {
-                SetValue(baseobj, f.Name, f.GetValue(o));
+                SetValue(baseObj, f.Name, f.GetValue(o));
             }
             foreach (var p in GetProperties(o.GetType()))
             {
-                SetValue(baseobj, p.Name, p.GetValue(o));
+                SetValue(baseObj, p.Name, p.GetValue(o));
             }
-            return baseobj;
+            return baseObj;
         }
     }
 }

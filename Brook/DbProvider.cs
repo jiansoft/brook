@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace jIAnSoft.Brook
 {
-    public sealed class DbProvider : ProviderBase, IDisposable
+    internal sealed class DbProvider : ProviderBase, IDisposable
     {
         private bool _disposed;
 
@@ -23,36 +23,41 @@ namespace jIAnSoft.Brook
         /// DatabaseConfiguration
         /// </summary>
         internal DatabaseConfiguration DbConfig;
-        
-#if  NETSTANDARD2_1
+
+        private DbConnection _conn;
+
+        private DbTransaction _transaction;
+
         static DbProvider()
         {
+#if NETSTANDARD2_1
             foreach (var (_, value) in Utility.DbProviderFactories.Providers.ToArray())
             {
                 System.Data.Common.DbProviderFactories.RegisterFactory(value.Invariant,value.Type);
             }
-        }
 #endif
-        
+        }
+
         /// <inheritdoc />
         /// <summary>
         /// </summary>
         /// <param name="dbConfig"></param>
-        public DbProvider(DatabaseConfiguration dbConfig) 
+        internal DbProvider(DatabaseConfiguration dbConfig)
         {
-#if NET461 || NETSTANDARD2_1
-            _provider = System.Data.Common.DbProviderFactories.GetFactory(dbConfig.ProviderName);
-#elif NETSTANDARD2_0
+#if NETSTANDARD2_0
             _provider = DbProviderFactories.GetFactory(dbConfig.ProviderName);
+#else 
+            _provider = System.Data.Common.DbProviderFactories.GetFactory(dbConfig.ProviderName);
 #endif
             if (_provider == null)
             {
                 throw new SqlException($"Can`t create a specified server({dbConfig.Name} factory. Please check the ProviderName.");
             }
-            
+
             DbConfig = dbConfig;
+            _conn = CreateConnection();
         }
-        
+
         private static string PrintDbParameters(IReadOnlyCollection<DbParameter> parameters)
         {
             if (null == parameters)
@@ -74,23 +79,6 @@ namespace jIAnSoft.Brook
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="reader"></param>
-        /// <returns></returns>
-        private static T CreateInstanceFromReader<T>(IDataRecord reader)
-        {
-            var instance = Activator.CreateInstance<T>();
-            for (var i = reader.FieldCount - 1; i >= 0; i--)
-            {
-                ReflectionHelpers.SetValue(instance, reader.GetName(i), reader.GetValue(i));
-            }
-
-            return instance;
-        }
-
-        /// <summary>
         /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbConnection" /> class.
         /// </summary>
         /// <returns>A new instance of <see cref="T:System.Data.Common.DbConnection" />.</returns>
@@ -101,9 +89,46 @@ namespace jIAnSoft.Brook
             {
                 throw new SqlException($"Can't create a new instance of the provider's Connection ({DbConfig.Name}).");
             }
-
+            
             con.ConnectionString = DbConfig.Connection;
             return con;
+        }
+
+        /// <summary>
+        /// Creates and returns a <see cref="T:System.Data.Common.DbCommand" /> object associated with the current connection.
+        /// </summary>
+        /// <returns>A <see cref="T:System.Data.Common.DbCommand" /> object.</returns>
+        private DbCommand CreateCommand(int timeout, CommandType type, string sql, DbParameter[] parameters)
+        {
+            var cmd = _provider.CreateCommand();
+            if (cmd == null)
+            {
+                throw new SqlException($"Can't create a new instance of the provider's Command ({DbConfig.Name}).");
+            }
+
+            cmd.CommandType = type;
+            cmd.Connection = _conn;
+            cmd.CommandTimeout = timeout;
+            cmd.CommandText = sql;
+
+            if (null != parameters)
+            {
+                cmd.Parameters.AddRange(parameters);
+            }
+            
+            if (_conn.State == ConnectionState.Closed)
+            {
+                _conn.Open();
+            }
+
+            if (null == _transaction)
+            {
+                return cmd;
+            }
+
+            cmd.Transaction = _transaction;
+
+            return cmd;
         }
 
         /// <summary>
@@ -131,33 +156,7 @@ namespace jIAnSoft.Brook
 
             return adapter;
         }
-
-        /// <summary>
-        /// Creates and returns a <see cref="T:System.Data.Common.DbCommand" /> object associated with the current connection.
-        /// </summary>
-        /// <returns>A <see cref="T:System.Data.Common.DbCommand" /> object.</returns>
-        private DbCommand CreateCommand(int timeout, CommandType type, string sql, DbParameter[] parameters)
-        {
-            var cmd = _provider.CreateCommand();
-            if (cmd == null)
-            {
-                throw new SqlException($"Can't create a new instance of the provider's Command ({DbConfig.Name}).");
-            }
-            
-            cmd.Connection = CreateConnection();
-            cmd.CommandTimeout = timeout;
-            cmd.CommandText = sql;
-            cmd.CommandType = type;
-
-            if (null != parameters)
-            {
-                cmd.Parameters.AddRange(parameters);
-            }
-
-            cmd.Connection.Open();
-            return cmd;
-        }
-
+        
         /// <summary>
         /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbParameter" /> class.
         /// </summary>
@@ -181,41 +180,66 @@ namespace jIAnSoft.Brook
         }
 
         /// <summary>
-        ///  Execute SQL and return first row data that type is <see cref="T"/>.
+        /// Begins a database transaction with the specified isolation level.
         /// </summary>
-        /// <param name="timeout"></param>
-        /// <param name="type">SQL command type SP、Text</param>
-        /// <param name="sql">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        internal T First<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        /// <param name="isolation">The isolation level under which the transaction should run.</param>
+        internal void Begin(IsolationLevel isolation = IsolationLevel.ReadCommitted)
         {
-            var instance = default(T);
-            using (var cmd = CreateCommand(timeout, type, sql, parameters))
+            if (_conn == null)
             {
-                try
-                {
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        if (reader.HasRows && reader.Read())
-                        {
-                            instance = CreateInstanceFromReader<T>(reader);
-                        }
-
-                        reader.Close();
-                    }
-                }
-                catch (Exception e)
-                {
-                    throw SqlException(e, sql, parameters);
-                }
-                finally
-                {
-                    cmd.Connection.Close();
-                }
+                _conn = CreateConnection();
             }
 
-            return instance;
+            if (_transaction != null)
+            {
+                return;
+            }
+
+            if (_conn.State == ConnectionState.Closed)
+            {
+                _conn.Open();
+            }
+           
+            _transaction = _conn.BeginTransaction(isolation);
+        }
+
+        /// <summary>
+        /// Commits the database transaction
+        /// </summary>
+        internal void Commit()
+        {
+            if (_transaction == null)
+            {
+                return;
+            }
+            
+            _transaction.Commit();
+            _transaction.Dispose();
+            _transaction = null;
+        }
+
+        /// <summary>
+        /// Rolls back a transaction.
+        /// </summary>
+        internal void Rollback()
+        {
+            if (_transaction == null)
+            {
+                return;
+            }
+            
+            _transaction.Rollback();
+            _transaction.Dispose();
+            _transaction = null;
+        }
+
+        /// <summary>
+        /// Changes the current database for an open connection.
+        /// </summary>
+        /// <param name="database">The name of the database to use.</param>
+        internal void Change(string database)
+        {
+            _conn.ChangeDatabase(database);
         }
 
         /// <summary>
@@ -229,28 +253,34 @@ namespace jIAnSoft.Brook
         internal List<T> Query<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
             var re = new List<T>();
-            using (var cmd = CreateCommand(timeout, type, sql, parameters))
-            {
-                try
-                {
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.HasRows && reader.Read())
-                        {
-                            var instance = CreateInstanceFromReader<T>(reader);
-                            re.Add(instance);
-                        }
+            DbCommand cmd = null;
 
-                        reader.Close();
+            try
+            {
+                cmd = CreateCommand(timeout, type, sql, parameters);
+                using (var r = cmd.ExecuteReader(CommandBehavior.SingleResult))
+                {
+                    while (r.HasRows && r.Read())
+                    {
+                        var instance = ReflectionHelpers.ConvertAs<T>(r);
+                        re.Add(instance);
                     }
+                    r.Close();
                 }
-                catch (Exception e)
+            }
+            catch (Exception e)
+            {
+               throw SqlException(e, sql, parameters);
+            }
+            finally
+            {
+                cmd?.Dispose();
+                if (null == _transaction)
                 {
-                    throw SqlException(e, sql, parameters);
-                }
-                finally
-                {
-                    cmd.Connection.Close();
+                    if (_conn.State == ConnectionState.Open)
+                    {
+                        _conn.Close();
+                    }
                 }
             }
 
@@ -270,26 +300,145 @@ namespace jIAnSoft.Brook
             try
             {
                 var p = CreateParameter("@ReturnValue", null, DbType.String, 0, ParameterDirection.ReturnValue);
-                if (p == null) return default;
+                if (p == null)
+                {
+                    return default;
+                }
+                
                 p.IsNullable = true;
-                var dbParameters = new[] {p};
+                var dbParameters = new[] { p };
                 if (parameters != null)
                 {
                     dbParameters = dbParameters.Concat(parameters).ToArray();
                 }
 
-                Execute(timeout, type, sql, new [] {dbParameters} );
-                
+                Execute(timeout, type, sql, new[] { dbParameters });
+
                 if (null == p.Value)
                 {
                     return default;
                 }
 
-                return (T) Conversion.ConvertTo<T>(p.Value);
+                return (T)Conversion.ConvertTo<T>(p.Value);
             }
             catch (Exception sqlEx)
             {
                 throw SqlException(sqlEx, sql, parameters);
+            }
+        }
+
+        /// <summary>
+        ///  Execute SQL and return an <see cref="T"/>.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="type">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        internal T One<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        {
+            DbCommand cmd = null;
+
+            try
+            {
+                cmd = CreateCommand(timeout, type, sql, parameters);
+                var result = cmd.ExecuteScalar();
+                return null == result ? default : (T) Conversion.ConvertTo<T>(result);
+            }
+            catch (Exception sqlEx)
+            {
+                throw SqlException(sqlEx, sql, parameters);
+            }
+            finally
+            {
+                cmd?.Dispose();
+                if (null == _transaction)
+                {
+                    if (_conn.State == ConnectionState.Open)
+                    {
+                        _conn.Close();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Execute SQL and return an <see cref="System.Data.DataTable"/>.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="type">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        internal DataTable Table(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        {
+            DbCommand cmd = null;
+
+            try
+            {
+                using (var t = new DataTable {Locale = Section.Get.Common.Culture})
+                using (var adapter = CreateDataAdapter())
+                {
+                    cmd = CreateCommand(timeout, type, sql, parameters);
+                    adapter.SelectCommand = cmd;
+                    adapter.Fill(t);
+                    return t;
+                }
+            }
+            catch (Exception e)
+            {
+                throw SqlException(e, sql, parameters);
+            }
+            finally
+            {
+                cmd?.Dispose();
+                if (null == _transaction)
+                {
+                    if (_conn.State == ConnectionState.Open)
+                    {
+                        _conn.Close();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Execute SQL and return an <see cref="System.Data.DataSet"/>.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="type">SQL command type SP、Text</param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <returns></returns>
+        internal DataSet DataSet(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        {
+            DbCommand cmd = null;
+
+            try
+            {
+                using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
+                using (var adapter = CreateDataAdapter())
+                {
+                    cmd = CreateCommand(timeout, type, sql, parameters);
+                    adapter.SelectCommand = cmd;
+                    adapter.Fill(ds);
+                    return ds;
+                }
+            }
+            catch (Exception e)
+            {
+                throw SqlException(e, sql, parameters);
+            }
+            finally
+            {
+                cmd?.Dispose();
+                if (null == _transaction)
+                {
+                    if (_conn.State == ConnectionState.Open)
+                    {
+                        _conn.Close();
+                    }
+                }
             }
         }
 
@@ -305,137 +454,93 @@ namespace jIAnSoft.Brook
         {
             var returnValue = new int[parameters.Length];
             DbParameter[] currentDbParameter = null;
-            using (var cmd = CreateCommand(timeout, type, sql, null))
+            DbCommand cmd = null;
+            
+            try
             {
-                try
+                cmd = CreateCommand(timeout, type, sql, null);
+                for (var index = 0; index < parameters.Length; index++)
                 {
-                    for (var index = 0; index < parameters.Length; index++)
+                    cmd.Parameters.Clear();
+                    if (null != parameters[index] && parameters[index].Any())
                     {
-                        cmd.Parameters.Clear();
-                        if (null != parameters[index] && parameters[index].Any())
-                        {
-                            cmd.Parameters.AddRange(parameters[index]);
-                            currentDbParameter = parameters[index];
-                        }
-
-                        var r = cmd.ExecuteNonQuery();
-                        returnValue[index] = r;
+                        cmd.Parameters.AddRange(parameters[index]);
+                        currentDbParameter = parameters[index];
                     }
 
-                    return returnValue;
-                }
-                catch (Exception sqlEx)
-                {
-                    throw SqlException(sqlEx, sql, currentDbParameter);
-                }
-                finally
-                {
-                    cmd.Connection.Close();
+                    var r = cmd.ExecuteNonQuery();
+                    returnValue[index] = r;
                 }
             }
+            catch (Exception sqlEx)
+            {
+                throw SqlException(sqlEx, sql, currentDbParameter);
+            }
+            finally
+            {
+                cmd?.Dispose();
+                if (null == _transaction)
+                {
+                    if (_conn.State == ConnectionState.Open)
+                    {
+                        _conn.Close();
+                    }
+                }
+            }
+
+            return returnValue;
         }
 
         /// <summary>
-        ///  Execute SQL and return an <see cref="T"/>.
+        ///  Execute SQL and return first row data that type is <see cref="T"/>.
         /// </summary>
         /// <param name="timeout"></param>
         /// <param name="type">SQL command type SP、Text</param>
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal T One<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        internal T First<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
         {
-            using (var cmd = CreateCommand(timeout, type, sql, parameters))
+            var instance = default(T);
+            DbCommand cmd = null;
+
+            try
             {
-                try
+                cmd = CreateCommand(timeout, type, sql, parameters);
+                using (var r = cmd.ExecuteReader(CommandBehavior.SingleResult | CommandBehavior.SingleRow))
                 {
-                    var result = cmd.ExecuteScalar();
-                    if (null == result)
+                    if (r.HasRows && r.Read())
                     {
-                        return default;
+                        instance = ReflectionHelpers.ConvertAs<T>(r);
                     }
 
-                    return (T) Conversion.ConvertTo<T>(result);
-                }
-                catch (Exception sqlEx)
-                {
-                    throw SqlException(sqlEx, sql, parameters);
-                }
-                finally
-                {
-                    cmd.Connection.Close();
+                    r.Close();
                 }
             }
-        }
-
-        /// <summary>
-        ///  Execute SQL and return an <see cref="System.Data.DataTable"/>..
-        /// </summary>
-        /// <param name="timeout"></param>
-        /// <param name="type">SQL command type SP、Text</param>
-        /// <param name="sql">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        internal DataTable Table(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
-        {
-            using (var t = new DataTable {Locale = Section.Get.Common.Culture})
-            using (var adapter = CreateDataAdapter())
-            using (var cmd = CreateCommand(timeout, type, sql, parameters))
+            catch (Exception e)
             {
-                try
-                {
-                    adapter.SelectCommand = cmd;
-                    adapter.Fill(t);
-                    adapter.Dispose();
-                    return t;
-                }
-                catch (Exception e)
-                {
-                    throw SqlException(e, sql, parameters);
-                }
-                finally
-                {
-                    cmd.Connection.Close();
-                }
+                throw SqlException(e, sql, parameters);
             }
-        }
-
-        /// <summary>
-        ///  Execute SQL and return an <see cref="System.Data.DataSet"/>.
-        /// </summary>
-        /// <param name="timeout"></param>
-        /// <param name="type">SQL command type SP、Text</param>
-        /// <param name="sql">SQL cmd</param>
-        /// <param name="parameters">SQL parameters</param>
-        /// <returns></returns>
-        internal DataSet DataSet(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
-        {
-            using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
-            using (var adapter = CreateDataAdapter())
-            using (var cmd = CreateCommand(timeout, type, sql, parameters))
+            finally
             {
-                try
+                cmd?.Dispose();
+                //無交易不論有無異常=關連線
+                if (null == _transaction)
                 {
-                    adapter.SelectCommand = cmd;
-                    adapter.Fill(ds);
-                    adapter.Dispose();
-                    return ds;
-                }
-                catch (Exception e)
-                {
-                    throw SqlException(e, sql, parameters);
-                }
-                finally
-                {
-                    cmd.Connection.Close();
+                    if (_conn.State == ConnectionState.Open)
+                    {
+                        _conn.Close();
+                    }
                 }
             }
+
+            return instance;
         }
 
-        private SqlException SqlException(Exception sqlEx, string sql, IReadOnlyCollection<DbParameter> parameters = null)
+        private SqlException SqlException(Exception ex, string sql, IReadOnlyCollection<DbParameter> parameters = null)
         {
-            var errStr = $"Source = {DbConfig.Name}\nCmd = {sql}\nParam = {PrintDbParameters(parameters)}\nMessage = {sqlEx.Message}\nStackTrace = {sqlEx.StackTrace}";
-            return new SqlException(errStr, sqlEx);
+            var errStr = $"Source = {DbConfig.Name}\nCmd = {sql}\nParam = {PrintDbParameters(parameters)}\nMessage = {ex}";
+            return new SqlException(errStr, ex);
         }
 
         private void Dispose(bool disposing)
@@ -444,8 +549,22 @@ namespace jIAnSoft.Brook
             {
                 return;
             }
-            
+
             _disposed = true;
+
+            if (null != _transaction)
+            {
+                _transaction.Dispose();
+                _transaction = null;
+            }
+
+            if (null != _conn)
+            {
+                _conn.Close();
+                _conn.Dispose();
+                _conn = null;
+            }
+
             _provider = null;
             DbConfig = null;
         }

@@ -32,7 +32,6 @@ namespace jIAnSoft.Brook.Mapper
         public DbConnection NewConnection()
         {
             var conn = _db.CreateConnection();
-            conn.Open();
             return conn;
         }
 
@@ -137,10 +136,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public T First<T>(int timeout, CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db.DbConfig))
-            {
-                return db.First<T>(timeout, commandType, sql, parameters);
-            }
+            return _db.First<T>(timeout, commandType, sql, parameters);
         }
 
         /// <summary>
@@ -176,10 +172,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public DataTable Table(int timeout, CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db.DbConfig))
-            {
-                return db.Table(timeout, commandType, sql, parameters);
-            }
+            return _db.Table(timeout, commandType, sql, parameters);
         }
 
         /// <summary>
@@ -215,10 +208,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public DataSet DataSet(int timeout, CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db.DbConfig))
-            {
-                return db.DataSet(timeout, commandType, sql, parameters);
-            }
+            return _db.DataSet(timeout, commandType, sql, parameters);
         }
 
         /// <summary>
@@ -254,12 +244,9 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public List<T> Query<T>(int timeout, CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db.DbConfig))
-            {
-                return db.Query<T>(timeout, commandType, sql, parameters);
-            }
+            return _db.Query<T>(timeout, commandType, sql, parameters);
         }
-
+        
         /// <summary>
         /// Executes a SQL statement, and returns a value that from an operation such as a stored procedure, built-in function, or user-defined function.
         /// </summary>
@@ -293,10 +280,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public T Value<T>(int timeout, CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db.DbConfig))
-            {
-                return db.Value<T>(timeout, commandType, sql, parameters);
-            }
+            return _db.Value<T>(timeout, commandType, sql, parameters);
         }
 
         /// <summary>
@@ -405,10 +389,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public int[] Execute(int timeout, CommandType commandType, string sql, DbParameter[][] parameters)
         {
-            using (var db = new DbProvider(_db.DbConfig))
-            {
-                return db.Execute(timeout, commandType, sql, parameters);
-            }
+            return _db.Execute(timeout, commandType, sql, parameters);
         }
 
         /// <summary>
@@ -444,10 +425,41 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public T One<T>(int timeout, CommandType commandType, string sql, DbParameter[] parameters = null)
         {
-            using (var db = new DbProvider(_db.DbConfig))
-            {
-                return db.One<T>(timeout, commandType, sql, parameters);
-            }
+            return _db.One<T>(timeout, commandType, sql, parameters);
+        }
+
+        /// <summary>
+        /// Begins a database transaction with the specified isolation level.
+        /// </summary>
+        /// <param name="isolation">The isolation level under which the transaction should run.</param>
+        public void BeginTransaction(IsolationLevel isolation = IsolationLevel.ReadCommitted)
+        {
+            _db.Begin(isolation);
+        }
+
+        /// <summary>
+        /// Commits the database transaction
+        /// </summary>
+        public void CommitTransaction()
+        {
+            _db.Commit();
+        }
+
+        /// <summary>
+        /// Rolls back a transaction.
+        /// </summary>
+        public void RollbackTransaction()
+        {
+            _db.Rollback();
+        }
+
+        /// <summary>
+        /// Changes the current database for an open connection.
+        /// </summary>
+        /// <param name="database">The name of the database to use.</param>
+        public void ChangeDatabase(string database)
+        {
+            _db.Change(database);
         }
 
         private void Dispose(bool disposing)

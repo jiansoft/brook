@@ -68,7 +68,7 @@ namespace jIAnSoft.Brook.Configuration
 #elif NETSTANDARD2_0 || NETSTANDARD2_1
     public class Common 
     {
-        public Common(string culture, string timezone)
+        public Common(string culture, string timezone, string name)
         {
             if (!string.IsNullOrEmpty(timezone))
             {
@@ -103,6 +103,8 @@ namespace jIAnSoft.Brook.Configuration
             {
                 Culture = CultureInfo.CurrentCulture;
             }
+
+            Name = name;
         }
 
         /// <summary>

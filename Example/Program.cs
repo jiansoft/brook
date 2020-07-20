@@ -104,8 +104,7 @@ namespace Example
 
                     if (null != account)
                     {
-                        Log.Info(
-                            $"{count} {providerNme} First  Id:{account.Id} Email:{account.Email} Name:{account.Name}");
+                        Log.Info($"{count} {providerNme} First  Id:{account.Id} Email:{account.Email} Name:{account.Name}");
                     }
 
                     if (dt == DatabaseType.MySQL)
@@ -182,7 +181,7 @@ namespace Example
 
         public static void Main(string[] args)
         {
-#if NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0
+#if NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0 || NETCOREAPP3_1
             if (File.Exists("Example.dll.config"))
             {
                 //There need to delete .net framework config file if we run the program as .net core app

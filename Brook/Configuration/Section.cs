@@ -21,7 +21,7 @@
         [ConfigurationProperty("common", IsRequired = true)]
         public Common Common => (Common) base["common"];
     }
-#elif NETSTANDARD2_0 || NETSTANDARD2_1
+#elif NETSTANDARD2_0 || NETSTANDARD2_1 || NETCOREAPP3_0 || NETCOREAPP3_1
     using Microsoft.Extensions.Configuration;
     using System.Collections.Generic;
     using System.IO;
@@ -50,7 +50,7 @@
 
             var co = new List<DatabaseConfiguration>();
             Figuration.GetSection("Database").Bind(co);
-            var c = new Common(Figuration["Common:Culture"], Figuration["Common:Timezone"]);
+            var c = new Common(Figuration["Common:Culture"], Figuration["Common:Timezone"], Figuration["Common:Name"]);
             Figuration.GetSection("Common").Bind(c);
             Common = c;
             Database = new DatabaseWrap();
