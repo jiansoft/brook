@@ -250,7 +250,7 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal List<T> Query<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        internal List<T> Query<T>(int timeout, CommandType type, string sql, DbParameter[] parameters)
         {
             var re = new List<T>();
             DbCommand cmd = null;
@@ -295,7 +295,7 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL command</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal T Value<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        internal T Value<T>(int timeout, CommandType type, string sql, DbParameter[] parameters)
         {
             try
             {
@@ -321,9 +321,9 @@ namespace jIAnSoft.Brook
 
                 return (T)Conversion.ConvertTo<T>(p.Value);
             }
-            catch (Exception sqlEx)
+            catch (Exception e)
             {
-                throw SqlException(sqlEx, sql, parameters);
+                throw SqlException(e, sql, parameters);
             }
         }
 
@@ -335,7 +335,7 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal T One<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        internal T One<T>(int timeout, CommandType type, string sql, DbParameter[] parameters)
         {
             DbCommand cmd = null;
 
@@ -345,9 +345,9 @@ namespace jIAnSoft.Brook
                 var result = cmd.ExecuteScalar();
                 return null == result ? default : (T) Conversion.ConvertTo<T>(result);
             }
-            catch (Exception sqlEx)
+            catch (Exception e)
             {
-                throw SqlException(sqlEx, sql, parameters);
+                throw SqlException(e, sql, parameters);
             }
             finally
             {
@@ -370,7 +370,7 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal DataTable Table(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        internal DataTable Table(int timeout, CommandType type, string sql, DbParameter[] parameters)
         {
             DbCommand cmd = null;
 
@@ -410,7 +410,7 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal DataSet DataSet(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        internal DataSet DataSet(int timeout, CommandType type, string sql, DbParameter[] parameters)
         {
             DbCommand cmd = null;
 
@@ -452,29 +452,41 @@ namespace jIAnSoft.Brook
         /// <returns></returns>
         internal int[] Execute(int timeout, CommandType type, string sql, DbParameter[][] parameters)
         {
-            var returnValue = new int[parameters.Length];
+            var parameterIsNull = parameters == null;
+
+            var returnValue = new int[parameterIsNull ? 1 : parameters.Length];
+
             DbParameter[] currentDbParameter = null;
             DbCommand cmd = null;
-            
+
             try
             {
                 cmd = CreateCommand(timeout, type, sql, null);
-                for (var index = 0; index < parameters.Length; index++)
+                
+                if (parameterIsNull)
                 {
-                    cmd.Parameters.Clear();
-                    if (null != parameters[index] && parameters[index].Any())
-                    {
-                        cmd.Parameters.AddRange(parameters[index]);
-                        currentDbParameter = parameters[index];
-                    }
-
                     var r = cmd.ExecuteNonQuery();
-                    returnValue[index] = r;
+                    returnValue[0] = r;
+                }
+                else
+                {
+                    for (var index = 0; index < parameters.Length; index++)
+                    {
+                        cmd.Parameters.Clear();
+                        if (null != parameters[index] && parameters[index].Any())
+                        {
+                            cmd.Parameters.AddRange(parameters[index]);
+                            currentDbParameter = parameters[index];
+                        }
+
+                        var r = cmd.ExecuteNonQuery();
+                        returnValue[index] = r;
+                    }
                 }
             }
-            catch (Exception sqlEx)
+            catch (Exception e)
             {
-                throw SqlException(sqlEx, sql, currentDbParameter);
+                throw SqlException(e, sql, currentDbParameter);
             }
             finally
             {
@@ -499,7 +511,7 @@ namespace jIAnSoft.Brook
         /// <param name="sql">SQL cmd</param>
         /// <param name="parameters">SQL parameters</param>
         /// <returns></returns>
-        internal T First<T>(int timeout, CommandType type, string sql, DbParameter[] parameters = null)
+        internal T First<T>(int timeout, CommandType type, string sql, DbParameter[] parameters)
         {
             var instance = default(T);
             DbCommand cmd = null;
@@ -537,10 +549,68 @@ namespace jIAnSoft.Brook
             return instance;
         }
 
-        private SqlException SqlException(Exception ex, string sql, IReadOnlyCollection<DbParameter> parameters = null)
+        /// <summary>
+        /// Wrap a transaction operation 
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="type"></param>
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
+        /// <param name="isolation"></param>
+        /// <returns></returns>
+        public QueryResult Transaction(int timeout, CommandType type, string sql, DbParameter[][] parameters, IsolationLevel isolation = IsolationLevel.ReadCommitted)
         {
-            var errStr = $"Source = {DbConfig.Name}\nCmd = {sql}\nParam = {PrintDbParameters(parameters)}\nMessage = {ex}";
+            try
+            {
+                Begin(isolation);
+
+                Execute(timeout, type, sql, parameters);
+
+                Commit();
+
+                return new QueryResult {Ok = true};
+            }
+            catch (Exception e)
+            {
+                Rollback();
+
+                return new QueryResult {Ok = false, Err = SqlException(e, sql, parameters)};
+            }
+            finally
+            {
+                if (_conn.State == ConnectionState.Open)
+                {
+                    _conn.Close();
+                }
+            }
+        }
+
+        private SqlException SqlException(Exception ex, string sql, IReadOnlyList<DbParameter[]> parameters)
+        {
+            string[] p;
+            
+            if (null == parameters)
+            {
+                p = new string[0];
+            }
+            else
+            {
+                p = new string[parameters.Count];
+
+                for (var index = 0; index < parameters.Count; index++)
+                {
+                    var parameter = parameters[index];
+                    p[index] = PrintDbParameters(parameter);
+                }
+            }
+
+            var errStr = $"Source = {DbConfig.Name}\nCmd = {sql}\nParam = {string.Join(",",p)}\nMessage = {ex}";
             return new SqlException(errStr, ex);
+        }
+
+        private SqlException SqlException(Exception ex, string sql, DbParameter[] parameters = null)
+        {
+            return SqlException(ex, sql, new[] {parameters});
         }
 
         private void Dispose(bool disposing)

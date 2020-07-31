@@ -99,8 +99,7 @@ namespace jIAnSoft.Brook.Mapper
         /// <returns></returns>
         public DbParameter Parameter(string name, DbType dbType, int size, object value, ParameterDirection direction)
         {
-            var p = _db.CreateParameter(name, value, dbType, size, direction);
-            return p;
+            return _db.CreateParameter(name, value, dbType, size, direction);
         }
 
         /// <summary>
@@ -426,6 +425,51 @@ namespace jIAnSoft.Brook.Mapper
         public T One<T>(int timeout, CommandType commandType, string sql, DbParameter[] parameters = null)
         {
             return _db.One<T>(timeout, commandType, sql, parameters);
+        }
+
+        /// <summary>
+        /// Wrap a transaction operation 
+        /// </summary>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <param name="isolation">The isolation level under which the transaction should run.</param>
+        public QueryResult Transaction(string sql, DbParameter[] parameters, IsolationLevel isolation = IsolationLevel.ReadCommitted)
+        {
+            return Transaction(sql, new[] {parameters}, isolation);
+        }
+        
+        /// <summary>
+        /// Wrap a transaction operation 
+        /// </summary>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <param name="isolation">The isolation level under which the transaction should run.</param>
+        public QueryResult Transaction(string sql, List<DbParameter[]> parameters, IsolationLevel isolation = IsolationLevel.ReadCommitted)
+        {
+            return Transaction(_db.DbConfig.CommandTimeout, sql, parameters.ToArray(), isolation);
+        }
+        
+        /// <summary>
+        /// Wrap a transaction operation 
+        /// </summary>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <param name="isolation">The isolation level under which the transaction should run.</param>
+        public QueryResult Transaction(string sql, DbParameter[][] parameters = null, IsolationLevel isolation = IsolationLevel.ReadCommitted)
+        {
+            return Transaction(_db.DbConfig.CommandTimeout, sql, parameters, isolation);
+        }
+
+        /// <summary>
+        /// Wrap a transaction operation 
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="sql">SQL cmd</param>
+        /// <param name="parameters">SQL parameters</param>
+        /// <param name="isolation">The isolation level under which the transaction should run.</param>
+        public QueryResult Transaction(int timeout, string sql, DbParameter[][] parameters, IsolationLevel isolation = IsolationLevel.ReadCommitted)
+        {
+            return _db.Transaction(timeout, CommandType.Text, sql, parameters, isolation);
         }
 
         /// <summary>

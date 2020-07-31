@@ -25,7 +25,7 @@ namespace Tests
         };
 
         private const string Query = "SELECT TOP 5 {id} AS {Id},{name} AS {Name},{email} AS {Email} FROM {account} ORDER BY {id} DESC LIMIT 5;";
-        private const string Insert = "insert into {account} ({name},{email})values(@name, @email) ";
+        private const string Insert = "insert into {account} ({name},{email})values(@name, @email);";
         private const string Update = "Update {account} SET {name} = '';";
         private const string Delete = "DELETE FROM {account} WHERE {id} = @id;";
 
@@ -96,14 +96,41 @@ namespace Tests
         [Test]
         public void TestTransaction()
         {
-            SqlMapper db = null;
+            var sqlCmd = $"{ConvertSeparate(Insert, DatabaseType.PostgreSQL)}; update account set \"name\" = 'Eddie in transaction' where id in (SELECT currval(pg_get_serial_sequence('account','id')));";
+            var result = Brook.Load("posql").Transaction(sqlCmd, new List<DbParameter[]>{new[]
+            {
+                Brook.Load("posql").Parameter("@name", "QQ1"),
+                Brook.Load("posql").Parameter("@email", $"QQ@QQ1.com")
+                
+            },new[]
+            {
+                Brook.Load("posql").Parameter("@name", "QQ2"),
+                Brook.Load("posql").Parameter("@email", $"QQ@QQ2.com")
+                
+            }});
+            
+            if (!result.Ok)
+            {
+                TestContext.WriteLine($"Why:{result.Err}");
+            }
 
+            result = Brook.Load("posql").Transaction("insert into account (name,email)values('Eddie', '@email');");
+            if (!result.Ok)
+            {
+                TestContext.WriteLine($"Why:{result.Err}");
+            }
+
+            var qq = Brook.Load("posql").First<Account>("SELECT id AS \"Id\", name AS \"Name\", email AS \"Email\",time AS \"Time\" FROM account order by id desc limit 1;");
+            
+            
+            SqlMapper db = null;
+            
             try
             {
-                db = Brook.Load("sqlserver");
+                db = Brook.Load("posql");
                 var name = $"我是交易1-{DateTime.Now:HHmmss}";
                 db.BeginTransaction();
-                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.PostgreSQL), new[]
                 {
                     new[]
                     {
@@ -111,13 +138,13 @@ namespace Tests
                         db.Parameter("@email", $"{name}@sqlserver.com")
                     }
                 });
-                var t = db.Table(ConvertSeparate(FindByName, DatabaseType.SQLServer), new[] { db.Parameter("@name", name) });
+                var t = db.Table(ConvertSeparate(FindByName, DatabaseType.PostgreSQL), new[] { db.Parameter("@name", name) });
                 TestContext.WriteLine($"[Table] Id = {t.Rows[0]["Id"]} Name = {t.Rows[0]["Name"]} Email = {t.Rows[0]["Email"]} ");
                 db.CommitTransaction();
 
                 name = $"我是交易2-{DateTime.Now:HHmmss}";
                 db.BeginTransaction();
-                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.PostgreSQL), new[]
                 {
                     new[]
                     {
@@ -125,16 +152,16 @@ namespace Tests
                         db.Parameter("@email", $"{name}@sqlserver.com")
                     }
                 });
-                var account = db.First<Account>(ConvertSeparate(FindByName, DatabaseType.SQLServer), new[] { db.Parameter("@name", name) });
+                var account = db.First<Account>(ConvertSeparate(FindByName, DatabaseType.PostgreSQL), new[] { db.Parameter("@name", name) });
                 TestContext.WriteLine($"[First] Id = {account.Id} Name = {account.Name} Email = {account.Email}");
-                var accounts = db.Query<Account>(ConvertSeparate(FindByName, DatabaseType.SQLServer), new[] { db.Parameter("@name", name) });
+                var accounts = db.Query<Account>(ConvertSeparate(FindByName, DatabaseType.PostgreSQL), new[] { db.Parameter("@name", name) });
                 TestContext.WriteLine($"[Query] Id = {accounts[0].Id} Name = {accounts[0].Name} Email = {accounts[0].Email}");
                 
                 db.CommitTransaction();
 
                 name = $"我是交易3-{DateTime.Now:HHmmss}";
                 db.BeginTransaction();
-                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.PostgreSQL), new[]
                 {
                     new[]
                     {
@@ -145,7 +172,7 @@ namespace Tests
                 db.RollbackTransaction();
 
                 name = $"我不是交易1-{DateTime.Now:HHmmss}";
-                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.PostgreSQL), new[]
                 {
                     new[]
                     {
@@ -153,13 +180,13 @@ namespace Tests
                         db.Parameter("@email", $"{name}@sqlserver.com")
                     }
                 });
-                var ds = db.DataSet(ConvertSeparate(FindByName, DatabaseType.SQLServer), new[] { db.Parameter("@name", name) });
+                var ds = db.DataSet(ConvertSeparate(FindByName, DatabaseType.PostgreSQL), new[] { db.Parameter("@name", name) });
                 TestContext.WriteLine($"[DataSet] Id = {ds.Tables[0].Rows[0]["Id"]} Name = {ds.Tables[0].Rows[0]["Name"]} Email = {ds.Tables[0].Rows[0]["Email"]}");
 
                 
                 name = $"我是交易4-{DateTime.Now:HHmmss}";
                 db.BeginTransaction();
-                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.SQLServer), new[]
+                db.Execute(15, CommandType.Text, ConvertSeparate(Insert, DatabaseType.PostgreSQL), new[]
                 {
                     new[]
                     {
@@ -167,7 +194,7 @@ namespace Tests
                         db.Parameter("@email", $"{name}@sqlserver.com")
                     }
                 });
-                db.ChangeDatabase("Order");
+                db.ChangeDatabase("postgres");
                 //throw new Exception("QQ");
             }
             catch (Exception e)
@@ -585,5 +612,7 @@ namespace Tests
         public long Id { get; set; }
         public string Email { get; set; }
         public string Name { get; set; }
+        
+        public DateTime Time { get; set; }
     }
 }

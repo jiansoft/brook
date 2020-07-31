@@ -178,7 +178,7 @@ namespace jIAnSoft.Brook.Utility
             var instance = Activator.CreateInstance<T>();
             for (var i = reader.FieldCount - 1; i >= 0; i--)
             {
-                SetValue(instance, reader.GetName(i), reader.GetValue(i));
+                SetValue<T>(instance, reader.GetName(i), reader.GetValue(i));
             }
 
             return instance;
