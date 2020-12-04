@@ -21,7 +21,7 @@
         [ConfigurationProperty("common", IsRequired = true)]
         public Common Common => (Common) base["common"];
     }
-#elif NETSTANDARD2_0 || NETSTANDARD2_1 || NETCOREAPP3_0 || NETCOREAPP3_1
+#elif NETSTANDARD2_0 || NETSTANDARD2_1 || NETCOREAPP3_0 || NETCOREAPP3_1 || NET5_0
     using Microsoft.Extensions.Configuration;
     using System.Collections.Generic;
     using System.IO;

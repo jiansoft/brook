@@ -65,7 +65,7 @@ namespace jIAnSoft.Brook.Configuration
         public string Name => Convert.ToString(base["name"]);
 
     }
-#elif NETSTANDARD2_0 || NETSTANDARD2_1
+#elif NETSTANDARD2_0 || NETSTANDARD2_1 || NET5_0
     public class Common 
     {
         public Common(string culture, string timezone, string name)

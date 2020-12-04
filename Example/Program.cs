@@ -1,9 +1,14 @@
 ﻿using IdGen;
 using jIAnSoft.Brook;
 using jIAnSoft.Nami.Clockwork;
+using MySql.Data.MySqlClient;
 using NLog;
+using Npgsql;
 using System;
 using System.Data;
+using System.Data.Common;
+using System.Data.SqlClient;
+using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 
@@ -157,11 +162,11 @@ namespace Example
         {
             var sqlType = new[]
             {
-                "mysql",
+                //"mysql",
                 "posql",
                 //  "sqlite",
-                "mssql",
-                "sqlserver"
+                //"mssql",
+                //"sqlserver"
             };
             foreach (var s in sqlType)
             {
@@ -181,13 +186,21 @@ namespace Example
 
         public static void Main(string[] args)
         {
-#if NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0 || NETCOREAPP3_1
+#if NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0 || NETCOREAPP3_1 || NET5_0
             if (File.Exists("Example.dll.config"))
             {
                 //There need to delete .net framework config file if we run the program as .net core app
                 File.Delete("Example.dll.config");
+#if NET5_0
+                DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);
+                DbProviderFactories.RegisterFactory("Microsoft.Data.SqlClient", Microsoft.Data.SqlClient.SqlClientFactory.Instance);
+                DbProviderFactories.RegisterFactory("MySql.Data.MySqlClient", MySqlClientFactory.Instance);
+                DbProviderFactories.RegisterFactory("Npgsql", NpgsqlFactory.Instance);
+                DbProviderFactories.RegisterFactory("Microsoft.Data.Sqlite", SQLiteFactory.Instance);
+#endif
             }
 #endif
+
 
             Nami.RightNow().Do(() =>
             {
