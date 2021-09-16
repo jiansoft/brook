@@ -1,13 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>       
-        <TargetFrameworks>net461;netcoreapp3.0</TargetFrameworks>
+        <TargetFrameworks>net461;net6.0;netcoreapp3.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
 		 <LangVersion>7</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="IdGen" Version="3.0.0" />
+        <PackageReference Include="jIAnSoft.Nami" Version="19.10.17" />
         <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
         <PackageReference Include="MySql.Data" Version="8.0.20" />
         <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />

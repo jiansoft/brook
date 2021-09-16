@@ -30,7 +30,7 @@ namespace jIAnSoft.Brook
 
         static DbProvider()
         {
-#if NETSTANDARD2_1
+#if NETSTANDARD2_1  || NET6_0
             foreach (var (_, value) in Utility.DbProviderFactories.Providers.ToArray())
             {
                 System.Data.Common.DbProviderFactories.RegisterFactory(value.Invariant,value.Type);

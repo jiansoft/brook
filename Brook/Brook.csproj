@@ -6,12 +6,12 @@
     <Title>Brook</Title>
     <Description>A high performance micro sql helper supporting SQL Server、MySQL、PostgreSQL、SQLite</Description>
     <Authors>Eddie</Authors>
-   <TargetFrameworks>net461;netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
+   <TargetFrameworks>net461;net5.0;net6.0;netstandard2.0;netstandard2.1</TargetFrameworks>
    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
    <RootNamespace>jIAnSoft.Brook</RootNamespace>
    <AssemblyVersion>20.7.31</AssemblyVersion>
    <FileVersion>20.7.31</FileVersion>
-   <Version>20.7.31</Version>
+   <Version>21.9.16</Version>
    <PackageLicenseUrl></PackageLicenseUrl>
    <Copyright>Copyright © jIAnSoft 2018 ~ DateTime.Now()</Copyright>
    <PackageProjectUrl>https://github.com/jiansoft/brook</PackageProjectUrl>
