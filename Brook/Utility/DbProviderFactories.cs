@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Reflection;
+
 namespace jIAnSoft.Brook.Utility
 {
     public static class DbProviderFactories
@@ -68,6 +69,16 @@ namespace jIAnSoft.Brook.Utility
                         Invariant = "System.Data.SQLite",
                         Description = ".NET Framework Data Provider for SQLite",
                         Type = "System.Data.SQLite.SQLiteFactory, System.Data.SQLite"
+                    }
+                },
+                {
+                    "Microsoft.Data.Sqlite",
+                    new DbProviderFactoryConfigItem
+                    {
+                        Name = "Sqlite Data Provider",
+                        Invariant = "Microsoft.Data.Sqlite",
+                        Description = ".NET Framework Data Provider for SQLite",
+                        Type = "Microsoft.Data.Sqlite.SqliteFactory, Microsoft.Data.Sqlite"
                     }
                 }
             };

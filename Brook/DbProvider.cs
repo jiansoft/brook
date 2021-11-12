@@ -33,7 +33,7 @@ namespace jIAnSoft.Brook
 #if NETSTANDARD2_1  || NET6_0
             foreach (var (_, value) in Utility.DbProviderFactories.Providers.ToArray())
             {
-                System.Data.Common.DbProviderFactories.RegisterFactory(value.Invariant,value.Type);
+                System.Data.Common.DbProviderFactories.RegisterFactory(value.Invariant, value.Type);
             }
 #endif
         }
@@ -591,7 +591,7 @@ namespace jIAnSoft.Brook
             
             if (null == parameters)
             {
-                p = new string[0];
+                p = Array.Empty<string>();
             }
             else
             {

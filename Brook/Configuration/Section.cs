@@ -1,4 +1,6 @@
-﻿namespace jIAnSoft.Brook.Configuration
+﻿using System;
+
+namespace jIAnSoft.Brook.Configuration
 {
 #if NET461
     using System.Configuration;
@@ -36,7 +38,7 @@
 
         private Section()
         {
-            var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory());
+            var builder = new ConfigurationBuilder().SetBasePath(AppContext.BaseDirectory);
             if (File.Exists("app.json"))
             {
                 builder.AddJsonFile("app.json", true, true);

@@ -9,9 +9,9 @@
    <TargetFrameworks>net461;net5.0;net6.0;netstandard2.0;netstandard2.1</TargetFrameworks>
    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
    <RootNamespace>jIAnSoft.Brook</RootNamespace>
-   <AssemblyVersion>20.7.31</AssemblyVersion>
-   <FileVersion>20.7.31</FileVersion>
-   <Version>21.9.16</Version>
+   <AssemblyVersion>21.11.11</AssemblyVersion>
+   <FileVersion>21.11.11</FileVersion>
+   <Version>21.11.11</Version>
    <PackageLicenseUrl></PackageLicenseUrl>
    <Copyright>Copyright © jIAnSoft 2018 ~ DateTime.Now()</Copyright>
    <PackageProjectUrl>https://github.com/jiansoft/brook</PackageProjectUrl>
@@ -22,10 +22,17 @@
    <AssemblyName>Brook</AssemblyName>
    <Product>jIAnSoft.Brook</Product>
    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+   <Platforms>AnyCPU;x64</Platforms>
+   <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+   <EnableNETAnalyzers>True</EnableNETAnalyzers>
   
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net452|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net452|x64'">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
   <!--
