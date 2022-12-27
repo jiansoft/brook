@@ -6,12 +6,12 @@
     <Title>Brook</Title>
     <Description>A high performance micro sql helper supporting SQL Server、MySQL、PostgreSQL、SQLite</Description>
     <Authors>Eddie</Authors>
-   <TargetFrameworks>net461;net5.0;net6.0;netstandard2.0;netstandard2.1</TargetFrameworks>
+   <TargetFrameworks>net461;net5.0;netstandard2.0</TargetFrameworks>
    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
    <RootNamespace>jIAnSoft.Brook</RootNamespace>
-   <AssemblyVersion>21.11.11</AssemblyVersion>
-   <FileVersion>21.11.11</FileVersion>
-   <Version>21.11.11</Version>
+   <AssemblyVersion>22.12.23</AssemblyVersion>
+   <FileVersion>22.12.23</FileVersion>
+   <Version>22.12.23</Version>
    <PackageLicenseUrl></PackageLicenseUrl>
    <Copyright>Copyright © jIAnSoft 2018 ~ DateTime.Now()</Copyright>
    <PackageProjectUrl>https://github.com/jiansoft/brook</PackageProjectUrl>
@@ -50,13 +50,9 @@
     <Reference Include="Microsoft.CSharp" />
      <Reference Include="System.Configuration" />
   </ItemGroup>  
-   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">   
-    
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">   
-  
-  </ItemGroup>
-
+   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+	      
+   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
 
   </ItemGroup>

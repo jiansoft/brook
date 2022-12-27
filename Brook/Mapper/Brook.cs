@@ -1,5 +1,5 @@
-﻿using jIAnSoft.Brook.Configuration;
-using System;
+﻿using System;
+using jIAnSoft.Brook.Configuration;
 
 namespace jIAnSoft.Brook.Mapper
 {
@@ -9,39 +9,44 @@ namespace jIAnSoft.Brook.Mapper
         {
             return new SqlMapper(db);
         }
-        
+
         public static SqlMapper LoadFromConnectionString(
             string dbConnectionString,
-            DatabaseType dt = DatabaseType.MySQL, 
+            DatabaseProviderName databaseProvider = DatabaseProviderName.MySQL,
             int timeout = 5)
         {
+            string providerName;
+            switch (databaseProvider)
+            {
+                case DatabaseProviderName.MicrosoftSQLServer:
+                    providerName = "Microsoft.Data.SqlClient";
+                    break;
+                case DatabaseProviderName.SQLServer:
+                    providerName = "System.Data.SqlClient";
+                    break;
+                case DatabaseProviderName.PostgreSQL:
+                    providerName = "Npgsql";
+                    break;
+                case DatabaseProviderName.MySQL:
+                    providerName = "MySql.Data.MySqlClient";
+                    break;
+                case DatabaseProviderName.SQLite:
+                    providerName = "System.Data.SQLite";
+                    break;
+                case DatabaseProviderName.MicrosoftSqlite:
+                    providerName = "Microsoft.Data.Sqlite";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(databaseProvider), databaseProvider, null);
+            }
+
             var dbConfig = new DatabaseConfiguration
             {
                 Connection = dbConnectionString,
-                Name = dt.ToString(),
+                Name = databaseProvider.ToString(),
+                ProviderName = providerName,
                 CommandTimeout = timeout
             };
-
-            switch (dt)
-            {
-                case DatabaseType.MsSQL:
-                    dbConfig.ProviderName = "Microsoft.Data.SqlClient";
-                    break;
-                case DatabaseType.SQLServer:
-                    dbConfig.ProviderName = "System.Data.SqlClient";
-                    break;
-                case DatabaseType.PostgreSQL:
-                    dbConfig.ProviderName = "Npgsql";
-                    break;
-                case DatabaseType.MySQL:
-                    dbConfig.ProviderName = "MySql.Data.MySqlClient";
-                    break;
-                case DatabaseType.SQLite:
-                    dbConfig.ProviderName = "System.Data.SQLite";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(dt), dt, null);
-            }
 
             return new SqlMapper(dbConfig);
         }

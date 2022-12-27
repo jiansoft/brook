@@ -8,6 +8,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 
+
 namespace jIAnSoft.Brook
 {
     internal sealed class DbProvider : ProviderBase, IDisposable
@@ -28,15 +29,15 @@ namespace jIAnSoft.Brook
 
         private DbTransaction _transaction;
 
+#if NETSTANDARD2_1 || NET5_0_OR_GREATER
         static DbProvider()
         {
-#if NETSTANDARD2_1  || NET6_0
-            foreach (var (_, value) in Utility.DbProviderFactories.Providers.ToArray())
+            foreach (var (_, value) in Utility.DbProviderFactories.Providers)
             {
                 System.Data.Common.DbProviderFactories.RegisterFactory(value.Invariant, value.Type);
             }
-#endif
         }
+#endif
 
         /// <inheritdoc />
         /// <summary>
@@ -46,12 +47,13 @@ namespace jIAnSoft.Brook
         {
 #if NETSTANDARD2_0
             _provider = DbProviderFactories.GetFactory(dbConfig.ProviderName);
-#else 
+#else
             _provider = System.Data.Common.DbProviderFactories.GetFactory(dbConfig.ProviderName);
 #endif
             if (_provider == null)
             {
-                throw new SqlException($"Can`t create a specified server({dbConfig.Name} factory. Please check the ProviderName.");
+                throw new SqlException(
+                    $"Can`t create a specified server({dbConfig.Name} factory. Please check the ProviderName.");
             }
 
             DbConfig = dbConfig;
@@ -69,9 +71,9 @@ namespace jIAnSoft.Brook
             var i = 0;
             foreach (var p in parameters)
             {
-                var key = p.ParameterName ?? "null";
+                var key = p.ParameterName;
                 var value = p.Value ?? "null";
-                t[i] = $"{{Key:'{key}',Val:'{value.ToString().Replace("\"", "\\\"")}'}}";
+                t[i] = $"{{Key:'{key}',Val:'{value.ToString()?.Replace("\"", "\\\"")}'}}";
                 i++;
             }
 
@@ -89,7 +91,7 @@ namespace jIAnSoft.Brook
             {
                 throw new SqlException($"Can't create a new instance of the provider's Connection ({DbConfig.Name}).");
             }
-            
+
             con.ConnectionString = DbConfig.Connection;
             return con;
         }
@@ -115,7 +117,7 @@ namespace jIAnSoft.Brook
             {
                 cmd.Parameters.AddRange(parameters);
             }
-            
+
             if (_conn.State == ConnectionState.Closed)
             {
                 _conn.Open();
@@ -148,7 +150,8 @@ namespace jIAnSoft.Brook
                 throw new SqlException($"Can't create a new instance of the provider's DataAdapter ({DbConfig.Name}).");
             }
 
-            adapter = Assembly.Load("MySql.Data").CreateInstance("MySql.Data.MySqlClient.MySqlDataAdapter") as DbDataAdapter;
+            adapter =
+                Assembly.Load("MySql.Data").CreateInstance("MySql.Data.MySqlClient.MySqlDataAdapter") as DbDataAdapter;
             if (adapter == null)
             {
                 throw new SqlException($"Can't create a new instance of the provider's DataAdapter ({DbConfig.Name}).");
@@ -156,7 +159,7 @@ namespace jIAnSoft.Brook
 
             return adapter;
         }
-        
+
         /// <summary>
         /// Returns a new instance of the provider's class that implements the <see cref="T:System.Data.Common.DbParameter" /> class.
         /// </summary>
@@ -199,7 +202,7 @@ namespace jIAnSoft.Brook
             {
                 _conn.Open();
             }
-           
+
             _transaction = _conn.BeginTransaction(isolation);
         }
 
@@ -212,7 +215,7 @@ namespace jIAnSoft.Brook
             {
                 return;
             }
-            
+
             _transaction.Commit();
             _transaction.Dispose();
             _transaction = null;
@@ -227,7 +230,7 @@ namespace jIAnSoft.Brook
             {
                 return;
             }
-            
+
             _transaction.Rollback();
             _transaction.Dispose();
             _transaction = null;
@@ -265,12 +268,13 @@ namespace jIAnSoft.Brook
                         var instance = ReflectionHelpers.ConvertAs<T>(r);
                         re.Add(instance);
                     }
+
                     r.Close();
                 }
             }
             catch (Exception e)
             {
-               throw SqlException(e, sql, parameters);
+                throw SqlException(e, sql, parameters);
             }
             finally
             {
@@ -304,22 +308,22 @@ namespace jIAnSoft.Brook
                 {
                     return default;
                 }
-                
+
                 p.IsNullable = true;
-                var dbParameters = new[] { p };
+                var dbParameters = new[] {p};
                 if (parameters != null)
                 {
                     dbParameters = dbParameters.Concat(parameters).ToArray();
                 }
 
-                Execute(timeout, type, sql, new[] { dbParameters });
+                Execute(timeout, type, sql, new[] {dbParameters});
 
                 if (null == p.Value)
                 {
                     return default;
                 }
 
-                return (T)Conversion.ConvertTo<T>(p.Value);
+                return (T) Conversion.ConvertTo<T>(p.Value);
             }
             catch (Exception e)
             {
@@ -376,13 +380,15 @@ namespace jIAnSoft.Brook
 
             try
             {
-                using (var t = new DataTable {Locale = Section.Get.Common.Culture})
+                cmd = CreateCommand(timeout, type, sql, parameters);
                 using (var adapter = CreateDataAdapter())
                 {
-                    cmd = CreateCommand(timeout, type, sql, parameters);
                     adapter.SelectCommand = cmd;
-                    adapter.Fill(t);
-                    return t;
+                    using (var t = new DataTable {Locale = Section.Get.Common.Culture})
+                    {
+                        adapter.Fill(t);
+                        return t;
+                    }
                 }
             }
             catch (Exception e)
@@ -416,13 +422,15 @@ namespace jIAnSoft.Brook
 
             try
             {
-                using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
+                cmd = CreateCommand(timeout, type, sql, parameters);
                 using (var adapter = CreateDataAdapter())
                 {
-                    cmd = CreateCommand(timeout, type, sql, parameters);
                     adapter.SelectCommand = cmd;
-                    adapter.Fill(ds);
-                    return ds;
+                    using (var ds = new DataSet {Locale = Section.Get.Common.Culture})
+                    {
+                        adapter.Fill(ds);
+                        return ds;
+                    }
                 }
             }
             catch (Exception e)
@@ -453,16 +461,13 @@ namespace jIAnSoft.Brook
         internal int[] Execute(int timeout, CommandType type, string sql, DbParameter[][] parameters)
         {
             var parameterIsNull = parameters == null;
-
             var returnValue = new int[parameterIsNull ? 1 : parameters.Length];
-
             DbParameter[] currentDbParameter = null;
             DbCommand cmd = null;
 
             try
             {
                 cmd = CreateCommand(timeout, type, sql, null);
-                
                 if (parameterIsNull)
                 {
                     var r = cmd.ExecuteNonQuery();
@@ -536,7 +541,7 @@ namespace jIAnSoft.Brook
             finally
             {
                 cmd?.Dispose();
-                //無交易不論有無異常=關連線
+                //無交易不論有無異常關連線
                 if (null == _transaction)
                 {
                     if (_conn.State == ConnectionState.Open)
@@ -558,7 +563,8 @@ namespace jIAnSoft.Brook
         /// <param name="parameters"></param>
         /// <param name="isolation"></param>
         /// <returns></returns>
-        public QueryResult Transaction(int timeout, CommandType type, string sql, DbParameter[][] parameters, IsolationLevel isolation = IsolationLevel.ReadCommitted)
+        public QueryResult Transaction(int timeout, CommandType type, string sql, DbParameter[][] parameters,
+            IsolationLevel isolation = IsolationLevel.ReadCommitted)
         {
             try
             {
@@ -588,7 +594,7 @@ namespace jIAnSoft.Brook
         private SqlException SqlException(Exception ex, string sql, IReadOnlyList<DbParameter[]> parameters)
         {
             string[] p;
-            
+
             if (null == parameters)
             {
                 p = Array.Empty<string>();
@@ -604,7 +610,7 @@ namespace jIAnSoft.Brook
                 }
             }
 
-            var errStr = $"Source = {DbConfig.Name}\nCmd = {sql}\nParam = {string.Join(",",p)}\nMessage = {ex}";
+            var errStr = $"Source = {DbConfig.Connection}\nCmd = {sql}\nParam = {string.Join(",", p)}\nMessage = {ex}";
             return new SqlException(errStr, ex);
         }
 

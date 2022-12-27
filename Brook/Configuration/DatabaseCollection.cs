@@ -1,5 +1,4 @@
-﻿
-namespace jIAnSoft.Brook.Configuration
+﻿namespace jIAnSoft.Brook.Configuration
 {
 #if NET461
     using System.Configuration;
@@ -26,9 +25,8 @@ namespace jIAnSoft.Brook.Configuration
             return BaseGet(key) != null;
         }
     }
-#elif NETSTANDARD2_0 || NETSTANDARD2_1 || NET5_0 || NET6_0
+#else
     using System.Collections.Generic;
-
     public class DatabaseCollection
     {
         private static DatabaseCollection _instance;

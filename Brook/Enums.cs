@@ -1,13 +1,12 @@
 ﻿namespace jIAnSoft.Brook
 {
-    public enum DatabaseType
+    public enum DatabaseProviderName
     {
         MySQL,
         SQLServer,
-        MsSQL,
+        MicrosoftSQLServer,
         PostgreSQL,
-        SQLite
-        //Oracle,
+        SQLite,
+        MicrosoftSqlite
     }
 }
-

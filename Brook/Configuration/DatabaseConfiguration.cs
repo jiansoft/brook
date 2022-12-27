@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-
+﻿
 namespace jIAnSoft.Brook.Configuration
 {
 #if NET461
@@ -49,7 +48,9 @@ namespace jIAnSoft.Brook.Configuration
     }
 
 #else
-    public sealed class DatabaseConfiguration 
+    using System.ComponentModel;
+
+    public sealed class DatabaseConfiguration
     {
         public string Connection { get; set; }
         public string Name { get; set; }

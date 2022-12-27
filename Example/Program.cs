@@ -39,21 +39,21 @@ namespace Example
             var sw = new Stopwatch();
             sw.Start();
 
-            DatabaseType dt;
+            DatabaseProviderName dt;
             switch (dbName)
             {
                 case "mssql":
                 case "sqlserver":
-                    dt = DatabaseType.SQLServer;
+                    dt = DatabaseProviderName.SQLServer;
                     break;
                 case "posql":
-                    dt = DatabaseType.PostgreSQL;
+                    dt = DatabaseProviderName.PostgreSQL;
                     break;
                 case "mysql":
-                    dt = DatabaseType.MySQL;
+                    dt = DatabaseProviderName.MySQL;
                     break;
                 default:
-                    dt = DatabaseType.SQLite;
+                    dt = DatabaseProviderName.SQLite;
                     const string dbPath = @".\brook.sqlite";
                     var dbExists = File.Exists(dbPath);
                     if (!dbExists)
@@ -68,7 +68,7 @@ namespace Example
                     break;
             }
 
-            var providerNme = Enum.GetName(typeof(DatabaseType), dt);
+            var providerNme = Enum.GetName(typeof(DatabaseProviderName), dt);
             // Log.Info($"From {providerNme} {count}");
 
             try
@@ -112,7 +112,7 @@ namespace Example
                         Log.Info($"{count} {providerNme} First  Id:{account.Id} Email:{account.Email} Name:{account.Name}");
                     }
 
-                    if (dt == DatabaseType.MySQL)
+                    if (dt == DatabaseProviderName.MySQL)
                     {
                         var one = db.One<int>(
                             CommandType.StoredProcedure,
@@ -143,15 +143,15 @@ namespace Example
             Nami.Delay(nextTime).Do(() => { RunCmd(dbName, ++count); });
         }
 
-        private static string ConvertSeparate(string sql, DatabaseType dt = DatabaseType.SQLite)
+        private static string ConvertSeparate(string sql, DatabaseProviderName dt = DatabaseProviderName.SQLite)
         {
             switch (dt)
             {
-                case DatabaseType.SQLServer:
+                case DatabaseProviderName.SQLServer:
                     return sql.Replace("{", "[").Replace("}", "]").Replace("LIMIT 10", "");
-                case DatabaseType.PostgreSQL:
+                case DatabaseProviderName.PostgreSQL:
                     return sql.Replace("{", "\"").Replace("}", "\"").Replace("TOP 10", "");
-                case DatabaseType.MySQL:
+                case DatabaseProviderName.MySQL:
                     return sql.Replace("{", "`").Replace("}", "`").Replace("TOP 10", "");
                 default:
                     return sql.Replace("{", "").Replace("}", "").Replace("TOP 10", "");
@@ -162,11 +162,11 @@ namespace Example
         {
             var sqlType = new[]
             {
-                //"mysql",
+                "mysql",
                 "posql",
                 //  "sqlite",
-                //"mssql",
-                //"sqlserver"
+                "mssql",
+                "sqlserver"
             };
             foreach (var s in sqlType)
             {
@@ -186,17 +186,17 @@ namespace Example
 
         public static void Main(string[] args)
         {
-#if NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP2_2 || NETCOREAPP3_0 || NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
             if (File.Exists("Example.dll.config"))
             {
                 //There need to delete .net framework config file if we run the program as .net core app
                 File.Delete("Example.dll.config");
-#if NET5_0
-                DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);
+#if NET5_0_OR_GREATER
+                /*DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);
                 DbProviderFactories.RegisterFactory("Microsoft.Data.SqlClient", Microsoft.Data.SqlClient.SqlClientFactory.Instance);
                 DbProviderFactories.RegisterFactory("MySql.Data.MySqlClient", MySqlClientFactory.Instance);
                 DbProviderFactories.RegisterFactory("Npgsql", NpgsqlFactory.Instance);
-                DbProviderFactories.RegisterFactory("Microsoft.Data.Sqlite", SQLiteFactory.Instance);
+                DbProviderFactories.RegisterFactory("Microsoft.Data.Sqlite", SQLiteFactory.Instance);*/
 #endif
             }
 #endif
