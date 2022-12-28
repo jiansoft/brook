@@ -43,8 +43,10 @@ namespace Example
             switch (dbName)
             {
                 case "mssql":
-                case "sqlserver":
                     dt = DatabaseProviderName.SQLServer;
+                    break;
+                case "sqlserver":
+                    dt = DatabaseProviderName.MicrosoftSQLServer;
                     break;
                 case "posql":
                     dt = DatabaseProviderName.PostgreSQL;
@@ -121,7 +123,7 @@ namespace Example
                         //Log.Info($"{providerNme} One is {one}");
                     }
 
-                    if (count % 1000 == 0)
+                    if (count % 100 == 0)
                     {
                         db.Execute(ConvertSeparate(DeleteAccount, dt), new[] {db.Parameter("@id", 3, DbType.Int32)});
                     }
@@ -147,6 +149,7 @@ namespace Example
         {
             switch (dt)
             {
+                case DatabaseProviderName.MicrosoftSQLServer:
                 case DatabaseProviderName.SQLServer:
                     return sql.Replace("{", "[").Replace("}", "]").Replace("LIMIT 10", "");
                 case DatabaseProviderName.PostgreSQL:
